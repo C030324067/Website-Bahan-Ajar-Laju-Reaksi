@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>BioHalt — Zombie Cure Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Share+Tech+Mono&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;touch-action:manipulation;}
+.screen{position:fixed;inset:0;display:none;}
+.screen.show{display:flex;}
+
+@keyframes drip{0%{height:0;opacity:.9}100%{height:110px;opacity:0}}
+@keyframes flicker{0%,100%{opacity:1}48%{opacity:.7}50%{opacity:.1}52%{opacity:.9}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes zfloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(2deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes warnGlow{0%,100%{box-shadow:0 0 10px rgba(220,0,0,.2)}50%{box-shadow:0 0 40px rgba(255,0,0,.7)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes ds1{0%,100%{transform:translateX(0)}30%{transform:translateX(-5px)}70%{transform:translateX(5px)}}
+@keyframes ds2{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}60%{transform:translateX(9px)}}
+@keyframes ds3{0%,100%{transform:translateX(0)}10%{transform:translateX(-14px) rotate(-.6deg)}30%{transform:translateX(14px) rotate(.6deg)}50%{transform:translateX(-10px)}70%{transform:translateX(10px)}}
+@keyframes crtOn{from{clip-path:inset(50% 0 50% 0);opacity:0}to{clip-path:inset(0);opacity:1}}
+@keyframes bubRise{0%{transform:translateY(0);opacity:.8}100%{transform:translateY(-40px);opacity:0}}
+@keyframes smokeUp{0%{transform:translateY(0) scale(1);opacity:.45}100%{transform:translateY(-55px) scale(2.5);opacity:0}}
+@keyframes pourAnim{0%,100%{transform:rotate(0deg)}40%{transform:rotate(-100deg)}75%{transform:rotate(-100deg)}}
+@keyframes specLine{0%,100%{height:30%}50%{height:88%}}
+
+#sIntro{background:linear-gradient(160deg,#080002,#150005 50%,#060010);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;gap:14px;overflow-y:auto;}
+.drip-bar{position:fixed;top:0;left:0;right:0;pointer-events:none;z-index:5;display:flex;gap:20px;}
+.drip{width:2.5px;border-radius:0 0 3px 3px;background:linear-gradient(#5a0000,#dd0000);animation:drip 3s ease-in-out infinite;opacity:0;}
+.warn-tag{background:rgba(200,0,0,.1);border:1px solid rgba(200,0,0,.35);padding:7px 18px;border-radius:5px;font-family:'Share Tech Mono',monospace;font-size:.65rem;color:#ff5555;letter-spacing:.1em;animation:warnGlow 1.8s infinite;z-index:1;max-width:100%;word-break:break-word;}
+.logo{font-family:'Syne',sans-serif;font-weight:900;line-height:.92;z-index:1;}
+.lz{font-size:clamp(2.8rem,11vw,5.5rem);color:#ff1a1a;text-shadow:0 0 30px #f00,0 0 70px #800;animation:flicker 5s infinite;}
+.lc{font-size:clamp(2.8rem,11vw,5.5rem);color:#00ddff;text-shadow:0 0 30px #00ddff;}
+.ls{font-size:.26em;color:#333;letter-spacing:.2em;display:block;margin-top:5px;}
+.mission{background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.14);border-radius:14px;padding:16px 18px;max-width:580px;width:100%;text-align:left;z-index:1;animation:fadeUp .7s ease .2s both;}
+.mh{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:#00ddff;letter-spacing:.14em;text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:7px;}
+.mh::before{content:'';width:6px;height:6px;border-radius:50%;background:#00ddff;animation:blink .9s infinite;flex-shrink:0;}
+.mi{display:flex;gap:9px;margin-bottom:8px;font-size:.76rem;color:#99aaaa;line-height:1.65;}
+.mn{width:18px;height:18px;border-radius:4px;background:rgba(0,200,255,.12);color:#00ddff;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.btn-start{background:linear-gradient(135deg,#aa0000,#dd2200);border:none;color:#fff;padding:16px 48px;border-radius:10px;font-family:'Syne',sans-serif;font-size:1rem;font-weight:900;cursor:pointer;letter-spacing:.06em;z-index:1;box-shadow:0 0 40px rgba(180,0,0,.5);animation:warnGlow 2s infinite;transition:transform .2s;min-height:54px;}
+.btn-start:active{transform:scale(.95);}
+
+#sGame{flex-direction:column;background:#e4ecf2;animation:crtOn .5s ease both;}
+#sGame::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:998;background:repeating-linear-gradient(0deg,rgba(0,0,0,.018) 0,rgba(0,0,0,.018) 1px,transparent 1px,transparent 2px);}
+
+#hud{height:44px;background:rgba(10,18,26,.94);border-bottom:2px solid rgba(0,180,255,.15);display:flex;align-items:center;gap:8px;padding:0 10px;z-index:50;flex-shrink:0;overflow:hidden;}
+.ht{font-family:'Share Tech Mono',monospace;font-size:1.25rem;color:#ffd700;text-shadow:0 0 8px rgba(255,215,0,.5);min-width:48px;}
+.ht.red{color:#ff2244;animation:blink .4s infinite;}
+.hlbl{font-family:'Share Tech Mono',monospace;font-size:.48rem;color:#334;letter-spacing:.07em;text-transform:uppercase;}
+.hsep{width:1px;height:24px;background:rgba(255,255,255,.08);flex-shrink:0;}
+.hbg{flex:1;min-width:50px;}
+.htrack{height:5px;background:rgba(0,0,0,.25);border-radius:3px;overflow:hidden;margin-top:2px;}
+.hfill{height:100%;border-radius:3px;transition:width .5s;}
+.hstreak{font-family:'Share Tech Mono',monospace;font-size:.75rem;font-weight:700;color:#334;}
+.hdoor{font-family:'Share Tech Mono',monospace;font-size:.58rem;margin-left:auto;white-space:nowrap;flex-shrink:0;}
+
+#gBody{flex:1;display:grid;grid-template-columns:1fr 300px;overflow:hidden;min-height:0;}
+
+#lab{position:relative;overflow:hidden;background:#dce8f0;}
+.r-ceil{position:absolute;top:0;left:0;right:0;height:30%;background:linear-gradient(to bottom,#f2f6fa,#e8eef4);}
+.r-wall{position:absolute;top:30%;left:0;right:0;bottom:24%;background:#edf3f8;}
+.r-wall::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(160,190,220,.1) 0,rgba(160,190,220,.1) 1px,transparent 1px,transparent 65px),repeating-linear-gradient(0deg,rgba(160,190,220,.1) 0,rgba(160,190,220,.1) 1px,transparent 1px,transparent 65px);}
+.r-floor{position:absolute;bottom:0;left:0;right:0;height:24%;background:linear-gradient(to bottom,#c5d4de,#aabbc8);}
+.r-floor::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.2) 0,rgba(255,255,255,.2) 1px,transparent 1px,transparent 52px),repeating-linear-gradient(0deg,rgba(255,255,255,.2) 0,rgba(255,255,255,.2) 1px,transparent 1px,transparent 52px);}
+.lights{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-around;padding:0 50px;}
+.lt{width:16%;height:9px;background:linear-gradient(to bottom,#ccc,#fff);border-radius:0 0 3px 3px;box-shadow:0 2px 28px rgba(255,255,255,.55),0 0 60px rgba(220,240,255,.35);}
+.cab-top{position:absolute;top:0;width:26%;height:30%;}
+.cab-left{left:0;background:linear-gradient(to right,#c5d5e5,#d5e5f2);border-right:2px solid #a5b8cc;border-bottom:4px solid #8faabb;}
+.cab-right{right:0;background:linear-gradient(to left,#c5d5e5,#d5e5f2);border-left:2px solid #a5b8cc;border-bottom:4px solid #8faabb;}
+.cab-d{position:absolute;top:8%;width:43%;height:80%;background:rgba(255,255,255,.25);border:1.5px solid #90a8bc;border-radius:2px;}
+.cab-d:first-child{left:5%}.cab-d:last-child{right:5%}
+.cab-h{position:absolute;top:50%;left:50%;width:4px;height:20px;background:#7890a0;transform:translate(-50%,-50%);border-radius:2px;}
+.cab-ctr{position:absolute;bottom:24%;left:0;right:0;height:19%;background:linear-gradient(to bottom,#bfcdd8,#adbbc8);border-top:3px solid #ccd8e4;}
+.bench{position:absolute;bottom:24%;left:0;right:0;height:7%;background:linear-gradient(to bottom,#e5eff8,#cddae8);border-top:4px solid #1e2e3e;box-shadow:0 4px 14px rgba(0,0,0,.16);}
+.eq-shelf{position:absolute;top:30%;left:2%;right:2%;height:2px;background:#88a0b2;box-shadow:0 2px 6px rgba(0,0,0,.18);}
+.eq-row{position:absolute;top:32%;left:2%;right:2%;display:flex;align-items:flex-end;gap:4px;}
+.spec-box{background:linear-gradient(135deg,#22303f,#334455);border-radius:5px;padding:4px 6px;width:60px;border:1.5px solid #445566;}
+.spec-scr{width:100%;height:18px;background:#001500;border-radius:2px;border:1px solid #002800;position:relative;overflow:hidden;margin-bottom:3px;}
+.sline{position:absolute;bottom:2px;width:2px;background:#00ff44;border-radius:1px;animation:specLine 1.4s ease-in-out infinite;}
+.pcr-box{background:linear-gradient(135deg,#182432,#243444);border-radius:5px;padding:4px 5px;width:56px;border:1.5px solid #344455;}
+.pcr-scr{background:#001020;height:13px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:.28rem;color:#00aaff;}
+.ph-box{background:linear-gradient(135deg,#e4dcd4,#d4ccc4);border-radius:4px;padding:4px;width:32px;border:1.5px solid #b4aca4;}
+.ph-scr{background:#182800;height:16px;border-radius:2px;margin-bottom:2px;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:.42rem;color:#88ff44;}
+.ph-probe{width:3px;height:18px;background:linear-gradient(#888,#555);margin:0 auto;border-radius:1px 1px 3px 3px;}
+.lab-win{position:absolute;top:4%;right:4%;width:18%;height:22%;background:#100a04;border:8px solid #d5e0e8;border-radius:3px;overflow:hidden;}
+.win-fog{position:absolute;inset:0;background:rgba(8,3,0,.6);transition:background .6s;}
+.zsh{position:absolute;filter:brightness(.06) contrast(5);animation:zfloat 2s ease-in-out infinite;}
+.win-cross{position:absolute;inset:0;background:linear-gradient(rgba(213,224,232,.8),rgba(213,224,232,.8)) center/8px 100% no-repeat,linear-gradient(rgba(213,224,232,.8),rgba(213,224,232,.8)) center/100% 8px no-repeat;}
+.door-wrap{position:absolute;top:22%;left:1%;width:13%;height:52%;}
+.door-el{position:absolute;inset:0;background:linear-gradient(to right,#bfccd8,#d2dde8,#bfccd8);border:3px solid #8fa0b2;border-radius:3px 3px 0 0;overflow:hidden;}
+.door-glass{position:absolute;top:4%;left:9%;right:9%;height:28%;background:rgba(80,140,200,.18);border:2px solid rgba(140,190,230,.4);}
+.door-p1{position:absolute;top:38%;left:8%;right:8%;height:20%;background:rgba(0,0,0,.07);border:1.5px solid rgba(0,0,0,.1);}
+.door-p2{position:absolute;top:64%;left:8%;right:8%;height:20%;background:rgba(0,0,0,.07);border:1.5px solid rgba(0,0,0,.1);}
+.door-knob-el{position:absolute;right:10%;top:50%;width:10%;aspect-ratio:1;background:radial-gradient(circle at 35% 35%,#e5ddd0,#9a8878);border-radius:50%;transform:translateY(-50%);}
+.door-sign{position:absolute;top:1%;left:50%;transform:translateX(-50%);background:#cc1111;color:#fff;font-size:.28rem;padding:2px 4px;border-radius:2px;font-weight:700;font-family:'Share Tech Mono',monospace;white-space:nowrap;}
+.door-crack{position:absolute;inset:0;opacity:0;transition:opacity .5s;pointer-events:none;}
+.ds1{animation:ds1 .55s ease-in-out infinite;}
+.ds2{animation:ds2 .3s ease-in-out infinite;}
+.ds3{animation:ds3 .16s ease-in-out infinite;}
+.bench-btls{position:absolute;bottom:31%;right:10%;display:flex;align-items:flex-end;gap:4px;z-index:6;}
+.hp-wrap{position:absolute;bottom:31%;left:18%;z-index:8;display:flex;flex-direction:column;align-items:center;}
+.hp-surf{width:58px;height:10px;background:radial-gradient(ellipse,#444,#2a2a2a);border-radius:2px;border:1px solid #333;transition:background .5s,box-shadow .5s;}
+.hp-surf.h1{background:radial-gradient(ellipse,#8a2808,#4a1000);box-shadow:0 0 10px rgba(180,40,0,.4);}
+.hp-surf.h2{background:radial-gradient(ellipse,#cc4818,#881800);box-shadow:0 0 18px rgba(220,60,0,.6);}
+.hp-surf.h3{background:radial-gradient(ellipse,#ff6828,#cc2800);box-shadow:0 0 28px rgba(255,80,0,.85);animation:pulse .7s infinite;}
+.hp-body{width:58px;height:14px;background:linear-gradient(135deg,#384050,#28303e);border:1.5px solid #404858;}
+.hp-disp{width:58px;height:13px;background:#000;border:1px solid #222;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:.46rem;color:#ff7700;}
+.hp-btns{width:58px;background:linear-gradient(#28303e,#182028);display:flex;justify-content:space-around;padding:2px;border-radius:0 0 4px 4px;}
+.dial-sm{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#777,#1a1a1a);border:2px solid #444;cursor:pointer;position:relative;user-select:none;}
+.dial-mark{position:absolute;top:3px;left:50%;width:2px;height:6px;background:#ff7700;border-radius:1px;transform-origin:bottom center;transform:translateX(-50%) rotate(0deg);}
+.hp-bkr{position:absolute;bottom:42%;left:22%;z-index:9;display:flex;flex-direction:column;align-items:center;}
+.hp-smoke{position:absolute;top:-12px;left:50%;transform:translateX(-50%);pointer-events:none;}
+.pov-layer{position:absolute;bottom:0;left:0;right:0;height:58%;pointer-events:none;z-index:20;}
+.recv-wrap{position:absolute;bottom:23%;left:50%;transform:translateX(-50%);z-index:22;}
+.pour-arm{position:absolute;bottom:0;right:4%;width:42%;z-index:24;transform-origin:75% 100%;}
+.pour-arm.pouring{animation:pourAnim 2.8s ease-in-out forwards;}
+.steady-arm{position:absolute;bottom:0;left:2%;width:38%;z-index:23;}
+.liq-stream{position:absolute;bottom:46%;left:52%;transform:translateX(-50%);z-index:26;display:none;}
+.liq-stream.active{display:block;}
+.vignette{position:absolute;inset:0;pointer-events:none;z-index:30;transition:background .5s;}
+.bflash{position:absolute;inset:0;background:rgba(200,0,0,.4);pointer-events:none;z-index:31;opacity:0;transition:opacity .3s;}
+
+#rPanel{background:#141c24;border-left:2px solid rgba(0,170,255,.12);display:flex;flex-direction:column;padding:8px 10px;gap:7px;overflow-y:auto;z-index:10;-webkit-overflow-scrolling:touch;}
+.pt{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:#00ccff;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:5px;}
+.pt::before{content:'';width:5px;height:5px;border-radius:50%;background:#00ccff;animation:blink .9s infinite;flex-shrink:0;}
+.pt.warn{color:#ffaa00;}.pt.warn::before{background:#ffaa00;}
+.pt.grn{color:#00dd88;}.pt.grn::before{background:#00dd88;}
+.pt.red{color:#ff2244;}.pt.red::before{background:#ff2244;}
+.pip-ui{background:rgba(0,170,255,.05);border:1px solid rgba(0,170,255,.12);border-radius:8px;padding:8px;}
+.pip-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.pip-bulb{width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ddd,#999);border:1.5px solid #888;cursor:pointer;transition:transform .15s;flex-shrink:0;font-size:1rem;display:flex;align-items:center;justify-content:center;}
+.pip-bulb:active{transform:scale(.78);}
+.pip-tube{width:12px;height:54px;border:1.5px solid #3a9acc;border-radius:5px 5px 1px 1px;position:relative;overflow:hidden;background:rgba(0,0,0,.3);}
+.pip-liq{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,#0077bb,#00aaee);transition:height .4s;}
+.pip-val{font-family:'Share Tech Mono',monospace;font-size:1rem;font-weight:700;color:#00ccff;}
+.pip-btns{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;}
+.pbtn{padding:8px 2px;border-radius:6px;border:1px solid;font-family:'Share Tech Mono',monospace;font-size:.6rem;cursor:pointer;transition:all .15s;font-weight:700;text-align:center;min-height:36px;}
+.pbtn.m{border-color:rgba(255,90,0,.3);background:rgba(255,90,0,.07);color:#ff8855;}
+.pbtn.p{border-color:rgba(0,170,255,.3);background:rgba(0,170,255,.07);color:#44aadd;}
+.pbtn:active{transform:scale(.93);}
+.temp-ui{background:rgba(255,90,0,.05);border:1px solid rgba(255,90,0,.13);border-radius:8px;padding:8px;}
+.temp-row{display:flex;align-items:center;gap:9px;margin-bottom:6px;}
+.big-dial{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#888,#1a1a1a);border:3px solid #444;box-shadow:0 4px 12px rgba(0,0,0,.6);cursor:pointer;position:relative;user-select:none;flex-shrink:0;touch-action:none;}
+.big-dial.hot{box-shadow:0 0 20px rgba(255,70,0,.6);}
+.big-dial-mark{position:absolute;top:4px;left:50%;width:3px;height:10px;background:#ff7700;border-radius:2px;transform-origin:bottom center;transform:translateX(-50%) rotate(0deg);}
+.temp-val{font-family:'Share Tech Mono',monospace;font-size:.95rem;font-weight:700;color:#ff8844;}
+.tg-track{height:7px;background:rgba(0,0,0,.3);border-radius:4px;overflow:hidden;margin-top:3px;}
+.tg-fill{height:100%;border-radius:4px;transition:width .4s,background .4s;}
+.temp-scale{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:.4rem;color:#445;margin-top:2px;}
+.temp-hint{font-size:.56rem;font-style:italic;margin-top:3px;min-height:13px;}
+.tpre-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;}
+.tpre{padding:6px 2px;border-radius:5px;border:1px solid #223;background:rgba(255,255,255,.03);color:#556;font-family:'Share Tech Mono',monospace;font-size:.46rem;cursor:pointer;transition:all .15s;text-align:center;min-height:30px;}
+.tpre:active{background:rgba(255,150,50,.2);color:#ffaa55;}
+.surf-ui{background:rgba(0,200,100,.04);border:1px solid rgba(0,200,100,.12);border-radius:8px;padding:8px;}
+.surf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}
+.sbtn{padding:7px 3px;border-radius:7px;border:1.5px solid rgba(0,200,100,.17);background:rgba(0,200,100,.04);color:#446655;font-family:'Share Tech Mono',monospace;font-size:.56rem;cursor:pointer;transition:all .18s;text-align:center;line-height:1.35;min-height:44px;}
+.sbtn.sel{background:rgba(0,200,100,.18);border-color:#00cc66;color:#00ee88;}
+.sbtn:active{transform:scale(.94);}
+.sbtn-icon{font-size:.82rem;display:block;margin-bottom:1px;}
+.cat-ui{background:rgba(170,80,255,.04);border:1px solid rgba(170,80,255,.12);border-radius:8px;padding:8px;}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:5px;}
+.cbtn{padding:8px 4px;border-radius:7px;border:1.5px solid rgba(170,80,255,.17);background:rgba(170,80,255,.04);color:#776699;font-family:'Share Tech Mono',monospace;font-size:.56rem;cursor:pointer;transition:all .18s;text-align:center;line-height:1.4;min-height:52px;}
+.cbtn.sel{background:rgba(170,80,255,.18);border-color:#aa44ff;color:#cc88ff;}
+.cbtn.none-cat{border-color:rgba(255,255,255,.07);background:rgba(255,255,255,.02);color:#445;}
+.cbtn.none-cat.sel{border-color:#667;color:#99a;}
+.cbtn:active{transform:scale(.94);}
+.cat-note{font-family:'Share Tech Mono',monospace;font-size:.55rem;color:#554477;font-style:italic;}
+.formula-box{background:rgba(0,0,0,.28);border:1px solid rgba(0,200,100,.08);border-radius:8px;padding:8px;font-family:'Share Tech Mono',monospace;font-size:.57rem;color:#3a5a3a;line-height:1.7;}
+.fval{display:block;font-size:.8rem;font-weight:700;color:#ffd700;margin-top:2px;}
+.fstat{display:block;font-size:.58rem;margin-top:2px;}
+.status-box{background:rgba(0,0,0,.28);border:1px solid rgba(255,200,0,.1);border-radius:8px;padding:8px;font-family:'Share Tech Mono',monospace;font-size:.6rem;}
+.sb-row{display:flex;justify-content:space-between;margin-bottom:3px;border-bottom:1px solid rgba(255,255,255,.04);padding-bottom:3px;}
+.sb-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+.sb-label{color:#445;}
+.chart-box{background:rgba(0,0,0,.3);border:1px solid rgba(0,170,255,.08);border-radius:8px;overflow:hidden;}
+#rc{width:100%;display:block;}
+.leg{display:flex;gap:10px;}
+.li{display:flex;align-items:center;gap:4px;font-family:'Share Tech Mono',monospace;font-size:.55rem;}
+.ll{width:12px;height:2px;border-radius:1px;}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.rbox{border-radius:7px;padding:7px;text-align:center;border:1px solid;}
+.rv{font-family:'Share Tech Mono',monospace;font-size:.8rem;font-weight:700;}
+.rl{font-family:'Share Tech Mono',monospace;font-size:.48rem;margin-top:1px;}
+.logbox{background:rgba(0,0,0,.3);border:1px solid rgba(0,170,255,.07);border-radius:7px;padding:7px;height:75px;overflow-y:auto;font-family:'Share Tech Mono',monospace;font-size:.56rem;line-height:1.5;}
+.lk.ok{color:#00dd88}.lk.w{color:#ffaa00}.lk.e{color:#ff3355}.lk.i{color:#44aaff}
+
+#sResult{align-items:center;justify-content:center;z-index:600;padding:16px;overflow-y:auto;}
+.rb-w{position:absolute;inset:0;background:rgba(0,10,18,.93);backdrop-filter:blur(12px);}
+.rb-l{position:absolute;inset:0;background:rgba(14,0,0,.95);backdrop-filter:blur(12px);}
+.rcard{position:relative;border-radius:18px;padding:24px 20px;max-width:460px;width:100%;text-align:center;animation:crtOn .4s ease;}
+.rc-w{background:rgba(0,200,150,.06);border:2px solid rgba(0,200,150,.3);box-shadow:0 0 50px rgba(0,200,150,.1);}
+.rc-l{background:rgba(200,0,0,.06);border:2px solid rgba(200,0,0,.3);animation:warnGlow 2s infinite;}
+.re{font-size:3.5rem;display:block;margin-bottom:10px;animation:zfloat 2s infinite;}
+.rtitle{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:900;margin-bottom:8px;}
+.rdesc{font-size:.76rem;color:#889;line-height:1.65;margin-bottom:12px;}
+.rsgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+.rs{background:rgba(0,0,0,.22);border-radius:8px;padding:9px;}
+.rsv{font-family:'Share Tech Mono',monospace;font-size:.8rem;font-weight:700;}
+.rsl{font-size:.5rem;color:#446;margin-top:1px;font-family:'Share Tech Mono',monospace;}
+.rhint{background:rgba(255,210,0,.06);border:1px solid rgba(255,210,0,.18);border-radius:8px;padding:11px;margin-bottom:12px;font-size:.71rem;color:#ccaa44;text-align:left;line-height:1.75;}
+.btnR,.btnOk{padding:13px 22px;border-radius:8px;font-family:'Syne',sans-serif;font-size:.85rem;font-weight:800;cursor:pointer;border:none;margin:4px;transition:all .2s;min-height:48px;}
+.btnR{background:rgba(180,0,0,.2);color:#ff6666;border:1px solid rgba(180,0,0,.35);}
+.btnOk{background:linear-gradient(135deg,#00dd88,#00aaff);color:#000;}
+.btnR:active,.btnOk:active{transform:scale(.94);}
+
+.m-tabs{display:none;gap:0;background:#0d151d;border-bottom:2px solid rgba(0,170,255,.12);flex-shrink:0;overflow-x:auto;scrollbar-width:none;}
+.m-tabs::-webkit-scrollbar{display:none;}
+.m-tab{flex-shrink:0;padding:10px 12px;border:none;background:transparent;color:#446;font-family:'Share Tech Mono',monospace;font-size:.62rem;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;min-height:42px;}
+.m-tab.active{color:#00ccff;border-bottom-color:#00ccff;background:rgba(0,170,255,.06);}
+.m-sec{display:none;flex-direction:column;gap:7px;padding:8px 10px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.m-sec.active{display:flex;}
+
+@media (max-width:700px){
+  #gBody{grid-template-columns:1fr;grid-template-rows:45% 1fr;}
+  #rPanel{display:none;}
+  #mobilePanel{display:flex;flex-direction:column;background:#141c24;border-top:2px solid rgba(0,170,255,.12);min-height:0;overflow:hidden;}
+  .m-tabs{display:flex;}
+  #hud{height:40px;padding:0 8px;gap:6px;}
+  .ht{font-size:1.05rem;}
+  .hlbl{font-size:.43rem;}
+  .hbg{min-width:40px;}
+  .htrack{height:4px;}
+  .eq-row{top:30%;gap:3px;}
+  .spec-box{width:48px;}
+  .pcr-box{width:44px;}
+  .ph-box{width:26px;}
+  .pour-arm{width:46%;right:2%;}
+  .steady-arm{width:40%;left:1%;}
+  .pbtn{min-height:42px;font-size:.65rem;padding:10px 2px;}
+  .sbtn{min-height:48px;font-size:.62rem;}
+  .cbtn{min-height:56px;font-size:.62rem;}
+  .tpre{min-height:36px;font-size:.55rem;padding:8px 2px;}
+  .big-dial{width:58px;height:58px;}
+  .pip-bulb{width:28px;height:28px;}
+  .btnR,.btnOk{padding:15px 24px;font-size:.9rem;min-height:52px;}
+  .rcard{padding:20px 14px;}
+  .rtitle{font-size:1.4rem;}
+}
+@media (max-width:380px){
+  .pip-btns{grid-template-columns:1fr 1fr;}
+  .surf-grid{gap:3px;}
+  .cat-grid{gap:3px;}
+}
+</style>
+</head>
+<body>
+<button class="back-button" onclick="location.href='landingpage.html'" style="position: fixed; top: 20px; left: 20px; z-index: 9999; display: none; cursor: pointer; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 50%; border: 1px solid #00ddff; color: #00ddff; width: 40px; height: 40px; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    🏠>
+    🏠 Kembali ke Beranda
+</button>
+<div class="screen show" id="sIntro">
+  <div class="drip-bar" id="dripBar"></div>
+  <div class="warn-tag">⚠ DARURAT NASIONAL — VIRUS Z-17 MENYEBAR — SEMUA WARGA BERLINDUNG ⚠</div>
+  <div class="logo">
+    <div><span class="lz">ZOMBIE</span>&nbsp;<span class="lc">CURE</span></div>
+    <span class="ls">BIOHALT RESEARCH LAB · CLASSIFIED ACCESS</span>
+  </div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:.7rem;color:#664444;font-style:italic;z-index:1">"Wabah menyebar. Jam terus berdetak. Lab adalah satu-satunya harapan."</div>
+  <div class="mission">
+    <div class="mh">📋 BRIEFING OPERASI</div>
+    <div class="mi"><div class="mn">1</div><div>Kamu ilmuwan terakhir. Zombie mengepung. Waktu: <strong style="color:#ff4444">60 detik</strong>.</div></div>
+    <div class="mi"><div class="mn">2</div><div>Atur <strong style="color:#00ddff">konsentrasi, suhu, bentuk reaktan,</strong> dan <strong style="color:#bb88ff">katalis</strong> untuk sintesis antivirus.</div></div>
+    <div class="mi"><div class="mn">3</div><div>Pertahankan laju antivirus &gt; laju zombie selama <strong style="color:#ffd700">10 detik berturut-turut</strong> untuk menang.</div></div>
+    <div class="mi"><div class="mn">⚗️</div><div>Setiap variabel punya syarat tersembunyi — <strong style="color:#ffaa44">eksplorasi dan temukan kombinasi yang tepat!</strong></div></div>
+  </div>
+  <button class="btn-start" id="btnStart">☣️ &nbsp;MASUK LAB SEKARANG</button>
+</div>
+
+<div class="screen" id="sGame">
+  <div id="hud">
+    <div><div class="hlbl">WAKTU</div><div class="ht" id="hudT">01:00</div></div>
+    <div class="hsep"></div>
+    <div class="hbg"><div class="hlbl">ANTIVIRUS</div><div class="htrack"><div class="hfill" id="hfC" style="width:0%;background:linear-gradient(to right,#00dd88,#00aaff)"></div></div></div>
+    <div class="hsep"></div>
+    <div class="hbg"><div class="hlbl">ZOMBIE</div><div class="htrack"><div class="hfill" id="hfV" style="width:18%;background:linear-gradient(to right,#ff8800,#ff0033)"></div></div></div>
+    <div class="hsep"></div>
+    <div><div class="hlbl">STREAK</div><div class="hstreak" id="hudSt">0s</div></div>
+    <div class="hdoor" id="hudDoor" style="color:#334">🚪 AMAN</div>
+  </div>
+  <div id="gBody">
+    <div id="lab">
+      <div class="r-ceil"></div><div class="r-wall"></div><div class="r-floor"></div>
+      <div class="lights"><div class="lt"></div><div class="lt"></div><div class="lt"></div></div>
+      <div class="cab-top cab-left"><div class="cab-d"><div class="cab-h"></div></div><div class="cab-d"><div class="cab-h"></div></div></div>
+      <div class="cab-top cab-right"><div class="cab-d"><div class="cab-h"></div></div><div class="cab-d"><div class="cab-h"></div></div></div>
+      <div class="cab-ctr" id="cabCtr"></div>
+      <div class="eq-shelf"></div>
+      <div class="eq-row">
+        <div class="spec-box">
+          <div class="spec-scr">
+            <div class="sline" style="left:18%;height:40%"></div>
+            <div class="sline" style="left:40%;animation-delay:.4s;background:#00ff88"></div>
+            <div class="sline" style="left:62%;animation-delay:.8s;background:#ffaa00"></div>
+            <div class="sline" style="left:80%;animation-delay:1.1s"></div>
+          </div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.24rem;color:#556;text-align:center">UV-VIS SPEC</div>
+        </div>
+        <div class="pcr-box">
+          <div style="background:linear-gradient(#344455,#243440);height:13px;border-radius:3px;margin-bottom:2px;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:.24rem;color:#556">▣ PCR-96</div>
+          <div class="pcr-scr" id="pcrScr">READY</div>
+        </div>
+        <div class="ph-box">
+          <div class="ph-scr" id="phScr">7.00</div>
+          <div class="ph-probe"></div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:.24rem;color:#556;text-align:center">pH</div>
+        </div>
+      </div>
+      <div class="bench"></div>
+      <div class="lab-win">
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,#050202,#100802)"></div>
+        <div class="win-fog" id="winFog"></div>
+        <div class="zsh" id="zA" style="right:5%;bottom:8%;font-size:1.9rem">🧟</div>
+        <div class="zsh" id="zB" style="left:5%;bottom:4%;animation-delay:.7s;font-size:1.5rem">🧟</div>
+        <div class="zsh" id="zC" style="left:32%;bottom:1%;display:none;animation-delay:1.2s;font-size:1.2rem">🧟</div>
+        <div class="win-cross"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:10px;background:#d5e0e8"></div>
+      </div>
+      <div class="door-wrap">
+        <div class="door-el" id="doorEl">
+          <div class="door-sign">EMERGENCY EXIT</div>
+          <div class="door-glass"></div>
+          <div class="door-p1"></div><div class="door-p2"></div>
+          <div class="door-knob-el"></div>
+          <svg class="door-crack" id="doorCrack" viewBox="0 0 100 200" preserveAspectRatio="none">
+            <polyline points="50,55 27,96 16,140 30,175" fill="none" stroke="rgba(0,0,0,.6)" stroke-width="2.5"/>
+            <polyline points="50,55 68,94 80,118 72,160" fill="none" stroke="rgba(0,0,0,.5)" stroke-width="1.8"/>
+          </svg>
+        </div>
+      </div>
+      <div class="hp-wrap">
+        <div class="hp-surf" id="hpSurf"></div>
+        <div class="hp-body"><div style="display:flex;justify-content:center;align-items:center;height:100%;font-family:'Share Tech Mono',monospace;font-size:.26rem;color:#556">HOT PLATE</div></div>
+        <div class="hp-disp" id="hpDisp">-- °C</div>
+        <div class="hp-btns">
+          <div class="dial-sm"><div class="dial-mark"></div></div>
+          <div class="dial-sm"><div class="dial-mark" style="transform:translateX(-50%) rotate(-55deg)"></div></div>
+        </div>
+      </div>
+      <div class="hp-bkr" id="hpBkr">
+        <div class="hp-smoke" id="hpSmoke"></div>
+        <svg width="44" height="62" viewBox="0 0 60 82">
+          <defs>
+            <clipPath id="hbClip"><path d="M11,7 L11,19 L3,72 Q3,79 11,79 L49,79 Q57,79 57,72 L49,19 L49,7 Z"/></clipPath>
+            <linearGradient id="hbGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(0,200,255,.7)"/><stop offset="100%" stop-color="rgba(0,110,180,.88)"/></linearGradient>
+          </defs>
+          <rect id="hbLiq" x="4" y="46" width="52" height="33" clip-path="url(#hbClip)" fill="url(#hbGrad)"/>
+          <g id="hbBubs" clip-path="url(#hbClip)"></g>
+          <path d="M11,7 L11,19 L3,72 Q3,79 11,79 L49,79 Q57,79 57,72 L49,19 L49,7 Z" fill="rgba(190,230,255,.07)" stroke="rgba(180,225,255,.6)" stroke-width="2"/>
+          <rect x="9" y="5" width="42" height="5" rx="2.5" fill="rgba(180,225,255,.4)" stroke="rgba(180,225,255,.7)" stroke-width="1.2"/>
+        </svg>
+      </div>
+      <div class="bench-btls" id="benchBtls"></div>
+      <div class="pov-layer">
+        <div class="recv-wrap" id="recvWrap">
+          <div id="erlSmoke" style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);pointer-events:none"></div>
+          <svg width="90" height="118" viewBox="0 0 100 130">
+            <defs>
+              <clipPath id="erlClip"><path d="M35,10 L35,55 L8,110 Q5,122 15,122 L85,122 Q95,122 92,110 L65,55 L65,10 Z"/></clipPath>
+              <linearGradient id="erlGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(0,200,100,.7)" id="eg0"/>
+                <stop offset="100%" stop-color="rgba(0,120,60,.9)" id="eg1"/>
+              </linearGradient>
+            </defs>
+            <rect id="erlLiq" x="6" y="90" width="88" height="32" clip-path="url(#erlClip)" fill="url(#erlGrad)" opacity=".85"/>
+            <g id="erlBubs" clip-path="url(#erlClip)"></g>
+            <path d="M35,10 L35,55 L8,110 Q5,122 15,122 L85,122 Q95,122 92,110 L65,55 L65,10 Z" fill="rgba(200,240,225,.08)" stroke="rgba(180,235,210,.7)" stroke-width="2.5"/>
+            <rect x="33" y="8" width="34" height="7" rx="3.5" fill="rgba(180,235,210,.4)" stroke="rgba(180,235,210,.7)" stroke-width="1.3"/>
+            <rect x="22" y="80" width="56" height="30" rx="4" fill="rgba(255,255,255,.88)"/>
+            <text x="50" y="91" text-anchor="middle" font-size="6.5" font-weight="700" fill="#222" font-family="monospace">ERLENMEYER</text>
+            <text x="50" y="101" text-anchor="middle" font-size="5.5" fill="#444" font-family="monospace">Z-CURE SYNTH</text>
+            <text x="50" y="111" text-anchor="middle" font-size="5" fill="#00aa55" font-family="monospace" id="erlVLabel">v=0.0000 M/s</text>
+          </svg>
+        </div>
+        <div class="liq-stream" id="liqStream">
+          <svg width="50" height="65" viewBox="0 0 55 70">
+            <path d="M45,0 Q40,25 32,45 Q26,60 20,70" fill="none" stroke="rgba(0,180,255,.75)" stroke-width="4.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <!-- RIGHT ARM — sarung tangan biru medis -->
+        <div class="pour-arm" id="pourArm">
+          <svg viewBox="0 0 220 300" width="100%" style="display:block">
+            <defs>
+              <linearGradient id="coatR" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f8fafc"/><stop offset="50%" stop-color="#eef3f8"/><stop offset="100%" stop-color="#dce6f0"/>
+              </linearGradient>
+              <linearGradient id="gloveR" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#6ec6e8"/><stop offset="40%" stop-color="#3a9abf"/><stop offset="100%" stop-color="#1e6a8a"/>
+              </linearGradient>
+              <linearGradient id="gloveRDark" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#1a5a7a"/><stop offset="100%" stop-color="#2a8aaa"/>
+              </linearGradient>
+              <linearGradient id="cuffR" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1a5875"/><stop offset="100%" stop-color="#2888a8"/>
+              </linearGradient>
+              <clipPath id="srcClip"><path d="M76,32 L76,55 L58,155 Q57,168 72,168 L148,168 Q163,168 162,155 L144,55 L144,32 Z"/></clipPath>
+              <linearGradient id="srcGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(0,180,255,.8)" id="srcG0"/>
+                <stop offset="100%" stop-color="rgba(0,100,180,.9)" id="srcG1"/>
+              </linearGradient>
+              <linearGradient id="glassG" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="rgba(255,255,255,.18)"/><stop offset="30%" stop-color="rgba(255,255,255,.04)"/><stop offset="100%" stop-color="rgba(255,255,255,.12)"/>
+              </linearGradient>
+              <filter id="softShadow"><feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,.2)"/></filter>
+            </defs>
+            <path d="M18,300 L20,190 Q18,162 32,145 L52,124 Q64,112 80,118 L91,124 Q98,113 114,119 L126,124 Q136,112 152,120 L166,136 Q178,155 176,180 L174,300 Z" fill="url(#coatR)" stroke="#c8d8e8" stroke-width="1.5"/>
+            <path d="M52,124 Q62,135 68,160 L70,300" fill="none" stroke="rgba(180,200,220,.5)" stroke-width="1"/>
+            <path d="M126,124 Q132,138 134,165 L136,300" fill="none" stroke="rgba(180,200,220,.5)" stroke-width="1"/>
+            <path d="M18,300 L20,242 Q30,250 97,250 Q160,250 174,244 L174,300 Z" fill="rgba(50,100,180,.15)" stroke="rgba(80,130,200,.3)" stroke-width="1"/>
+            <line x1="20" y1="250" x2="174" y2="244" stroke="rgba(100,150,200,.4)" stroke-width="1.5"/>
+            <path d="M56,210 Q42,200 38,185 Q34,168 42,156 Q50,144 62,148 Q70,150 74,162 L78,190 Z" fill="url(#gloveR)" stroke="#1e6080" stroke-width="1.2" filter="url(#softShadow)"/>
+            <path d="M42,175 Q46,168 56,170 L60,178" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
+            <path d="M44,162 Q50,158 58,162" fill="none" stroke="rgba(20,80,110,.35)" stroke-width=".8"/>
+            <path d="M78,200 L76,140 Q75,120 82,110 Q89,100 98,103 Q108,106 110,118 L112,145 L110,200 Z" fill="url(#gloveR)" stroke="#1e6080" stroke-width="1.2"/>
+            <path d="M80,168 Q94,164 108,168" fill="none" stroke="rgba(20,80,110,.3)" stroke-width=".8"/>
+            <path d="M79,145 Q94,141 109,145" fill="none" stroke="rgba(20,80,110,.25)" stroke-width=".7"/>
+            <path d="M82,118 Q86,108 96,108" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M113,200 L111,136 Q110,115 117,104 Q124,93 134,96 Q144,99 146,112 L148,140 L146,200 Z" fill="url(#gloveR)" stroke="#1e6080" stroke-width="1.2"/>
+            <path d="M114,168 Q129,164 144,168" fill="none" stroke="rgba(20,80,110,.3)" stroke-width=".8"/>
+            <path d="M114,145 Q129,141 145,145" fill="none" stroke="rgba(20,80,110,.25)" stroke-width=".7"/>
+            <path d="M118,110 Q126,100 136,102" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M148,200 L147,142 Q147,122 153,112 Q159,102 168,105 Q177,108 178,122 L178,148 L176,200 Z" fill="url(#gloveR)" stroke="#1e6080" stroke-width="1.2"/>
+            <path d="M149,170 Q162,166 176,170" fill="none" stroke="rgba(20,80,110,.3)" stroke-width=".8"/>
+            <path d="M154,118 Q161,109 170,111" fill="none" stroke="rgba(255,255,255,.38)" stroke-width="1.3" stroke-linecap="round"/>
+            <path d="M178,200 L178,150 Q178,133 183,124 Q188,115 196,117 Q204,119 205,131 L204,155 L202,200 Z" fill="url(#gloveRDark)" stroke="#1a5070" stroke-width="1.2"/>
+            <path d="M180,128 Q187,120 196,122" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M56,210 L78,200 L113,200 L148,200 L176,200 L202,200 L202,220 Q195,230 175,232 L78,232 Q62,230 56,220 Z" fill="url(#gloveR)" stroke="#1e6080" stroke-width="1.2"/>
+            <path d="M72,218 Q130,212 196,218" fill="none" stroke="rgba(20,80,110,.2)" stroke-width=".8"/>
+            <path d="M54,232 Q54,248 64,254 L192,254 Q204,248 204,232 L176,232 L78,232 Z" fill="url(#cuffR)" stroke="#155070" stroke-width="1.5"/>
+            <path d="M56,236 Q130,232 202,236" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+            <ellipse cx="129" cy="254" rx="75" ry="5" fill="rgba(10,60,85,.4)" stroke="#0e4060" stroke-width="1"/>
+            <path d="M82,115 Q100,100 125,108 Q140,115 148,130" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M116,100 Q128,94 140,100" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2" stroke-linecap="round"/>
+            <rect id="srcLiq" x="59" y="88" width="83" height="80" clip-path="url(#srcClip)" fill="url(#srcGrad)"/>
+            <g id="srcBubs" clip-path="url(#srcClip)"></g>
+            <path d="M76,32 L76,55 L58,155 Q57,168 72,168 L148,168 Q163,168 162,155 L144,55 L144,32 Z" fill="url(#glassG)" stroke="rgba(185,228,255,.78)" stroke-width="2.2"/>
+            <path d="M80,58 L82,148" stroke="rgba(255,255,255,.3)" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="144" y1="90" x2="152" y2="90" stroke="rgba(185,228,255,.5)" stroke-width="1"/>
+            <line x1="146" y1="110" x2="154" y2="110" stroke="rgba(185,228,255,.5)" stroke-width="1"/>
+            <line x1="148" y1="130" x2="156" y2="130" stroke="rgba(185,228,255,.5)" stroke-width="1"/>
+            <rect x="74" y="29" width="72" height="7" rx="3.5" fill="rgba(185,228,255,.45)" stroke="rgba(185,228,255,.8)" stroke-width="1.5"/>
+            <rect x="86" y="78" width="50" height="30" rx="3" fill="rgba(255,255,255,.9)" stroke="rgba(180,220,240,.6)" stroke-width="1"/>
+            <text x="111" y="91" text-anchor="middle" font-size="8.5" font-weight="700" fill="#0a2255" font-family="monospace">HCl</text>
+            <text x="111" y="103" text-anchor="middle" font-size="6.5" fill="#1a3488" font-family="monospace" id="srcConcLbl">3.0 M</text>
+          </svg>
+        </div>
+        <!-- LEFT ARM — sarung tangan biru medis -->
+        <div class="steady-arm">
+          <svg viewBox="0 0 200 285" width="100%" style="display:block">
+            <defs>
+              <linearGradient id="coatL" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f8fafc"/><stop offset="50%" stop-color="#eef3f8"/><stop offset="100%" stop-color="#dce6f0"/>
+              </linearGradient>
+              <linearGradient id="gloveL" x1="1" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#6ec6e8"/><stop offset="40%" stop-color="#3a9abf"/><stop offset="100%" stop-color="#1e6a8a"/>
+              </linearGradient>
+              <linearGradient id="gloveLDark" x1="1" y1="0" x2="0" y2="0">
+                <stop offset="0%" stop-color="#1a5a7a"/><stop offset="100%" stop-color="#2a8aaa"/>
+              </linearGradient>
+              <linearGradient id="cuffL" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1a5875"/><stop offset="100%" stop-color="#2888a8"/>
+              </linearGradient>
+              <filter id="softShadowL"><feDropShadow dx="-1" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,.2)"/></filter>
+            </defs>
+            <path d="M8,285 L10,188 Q8,160 22,143 L42,122 Q54,110 70,116 L82,122 Q90,110 106,116 L118,122 Q128,110 144,118 L158,134 Q170,153 168,178 L166,285 Z" fill="url(#coatL)" stroke="#c8d8e8" stroke-width="1.5"/>
+            <path d="M42,122 Q50,133 56,158 L58,285" fill="none" stroke="rgba(180,200,220,.5)" stroke-width="1"/>
+            <path d="M118,122 Q124,137 126,162 L128,285" fill="none" stroke="rgba(180,200,220,.5)" stroke-width="1"/>
+            <path d="M8,285 L10,245 Q22,252 88,252 Q152,252 166,246 L166,285 Z" fill="rgba(50,100,180,.15)" stroke="rgba(80,130,200,.3)" stroke-width="1"/>
+            <line x1="10" y1="252" x2="166" y2="246" stroke="rgba(100,150,200,.4)" stroke-width="1.5"/>
+            <path d="M18,202 L16,148 Q15,130 21,120 Q28,110 37,113 Q46,116 47,130 L46,155 L46,202 Z" fill="url(#gloveLDark)" stroke="#1a5070" stroke-width="1.2"/>
+            <path d="M18,127 Q26,119 36,121" fill="none" stroke="rgba(255,255,255,.32)" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M48,202 L47,144 Q47,124 53,114 Q60,104 69,107 Q78,110 79,124 L79,150 L78,202 Z" fill="url(#gloveL)" stroke="#1e6080" stroke-width="1.2"/>
+            <path d="M49,172 Q63,168 77,172" fill="none" stroke="rgba(20,80,110,.3)" stroke-width=".8"/>
+            <path d="M54,120 Q62,111 70,113" fill="none" stroke="rgba(255,255,255,.38)" stroke-width="1.3" stroke-linecap="round"/>
+            <path d="M82,202 L81,138 Q81,117 87,106 Q94,95 104,98 Q114,101 115,115 L116,142 L114,202 Z" fill="url(#gloveL)" stroke="#1e6080" stroke-width="1.2"/>
+            <path d="M83,170 Q98,166 113,170" fill="none" stroke="rgba(20,80,110,.3)" stroke-width=".8"/>
+            <path d="M88,112 Q97,103 107,105" fill="none" stroke="rgba(255,255,255,.42)" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M117,202 L116,142 Q116,122 122,112 Q129,102 138,105 Q148,108 149,122 L150,148 L148,202 Z" fill="url(#gloveL)" stroke="#1e6080" stroke-width="1.2"/>
+            <path d="M118,172 Q133,168 148,172" fill="none" stroke="rgba(20,80,110,.3)" stroke-width=".8"/>
+            <path d="M123,118 Q131,109 140,111" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M150,212 Q162,200 166,184 Q170,167 162,155 Q154,143 144,147 Q137,150 133,163 L130,192 Z" fill="url(#gloveL)" stroke="#1e6080" stroke-width="1.2" filter="url(#softShadowL)"/>
+            <path d="M162,170 Q156,162 146,165" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1"/>
+            <path d="M18,202 L46,202 L78,202 L114,202 L148,202 L150,212 L148,222 Q140,232 120,234 L46,234 Q30,232 18,222 Z" fill="url(#gloveL)" stroke="#1e6080" stroke-width="1.2"/>
+            <path d="M22,215 Q85,210 148,215" fill="none" stroke="rgba(20,80,110,.2)" stroke-width=".8"/>
+            <path d="M16,234 Q16,250 26,256 L150,256 Q162,250 162,234 L148,234 L46,234 Z" fill="url(#cuffL)" stroke="#155070" stroke-width="1.5"/>
+            <path d="M18,238 Q88,234 160,238" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+            <ellipse cx="89" cy="256" rx="73" ry="5" fill="rgba(10,60,85,.4)" stroke="#0e4060" stroke-width="1"/>
+            <path d="M48,110 Q66,96 88,104 Q102,112 108,126" fill="none" stroke="rgba(255,255,255,.52)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M84,98 Q96,92 108,97" fill="none" stroke="rgba(255,255,255,.38)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="vignette" id="vig"></div>
+      <div class="bflash" id="bflash"></div>
+    </div>
+
+    <div id="rPanel">
+      <div class="pt">⚗️ KONTROL SINTESIS</div>
+      <div class="pip-ui">
+        <div class="pt warn" style="font-size:.56rem;margin-bottom:4px">💧 Konsentrasi HCl</div>
+        <div class="pip-row">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div class="pip-bulb" onclick="changeConc(.5)">🫧</div>
+            <div class="pip-tube"><div class="pip-liq" id="pipLiq" style="height:25%"></div></div>
+          </div>
+          <div style="flex:1">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.56rem;color:#448;margin-bottom:2px">KONSENTRASI</div>
+            <div class="pip-val" id="vConc">3.0 <span style="font-size:.6rem">M</span></div>
+          </div>
+        </div>
+        <div class="pip-btns">
+          <button class="pbtn m" onclick="changeConc(-1)">−1M</button>
+          <button class="pbtn m" onclick="changeConc(-.5)">−½M</button>
+          <button class="pbtn p" onclick="changeConc(.5)">+½M</button>
+          <button class="pbtn p" onclick="changeConc(1)">+1M</button>
+        </div>
+      </div>
+      <div class="temp-ui">
+        <div class="pt warn" style="font-size:.56rem;margin-bottom:4px;color:#ff9944">🌡️ Suhu — GESER DIAL ↑↓</div>
+        <div class="temp-row">
+          <div>
+            <div class="big-dial" id="bigDial"><div class="big-dial-mark" id="bigMark"></div></div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.36rem;color:#446;text-align:center;margin-top:2px">PUTAR</div>
+          </div>
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span class="hlbl">SUHU TARGET</span>
+              <span class="temp-val" id="vTemp">25°C</span>
+            </div>
+            <div class="tg-track"><div class="tg-fill" id="tgFill" style="width:25%;background:#4488ff"></div></div>
+            <div class="temp-scale"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+            <div class="temp-hint" id="tempHint" style="color:#4488ff">Terlalu dingin.</div>
+          </div>
+        </div>
+        <div class="tpre-grid">
+          <button class="tpre" onclick="setTemp(25)">25°C</button>
+          <button class="tpre" onclick="setTemp(40)">40°C</button>
+          <button class="tpre" onclick="setTemp(55)">55°C</button>
+          <button class="tpre" onclick="setTemp(70)">70°C</button>
+          <button class="tpre" onclick="setTemp(85)">85°C</button>
+        </div>
+      </div>
+      <div class="surf-ui">
+        <div class="pt grn" style="font-size:.56rem;margin-bottom:4px">📐 Bentuk Reaktan</div>
+        <div class="surf-grid">
+          <div class="sbtn" id="sb0" onclick="setSurf(0)"><span class="sbtn-icon">🪨</span>Bongkahan<br><span style="font-size:.44rem;color:#335">1× area</span></div>
+          <div class="sbtn" id="sb1" onclick="setSurf(1)"><span class="sbtn-icon">⬛</span>Serpihan<br><span style="font-size:.44rem;color:#335">3× area</span></div>
+          <div class="sbtn" id="sb2" onclick="setSurf(2)"><span class="sbtn-icon">💊</span>Granul<br><span style="font-size:.44rem;color:#335">6× area</span></div>
+          <div class="sbtn sel" id="sb3" onclick="setSurf(3)"><span class="sbtn-icon">🌫️</span>Bubuk<br><span style="font-size:.44rem;color:#0a5">9× area</span></div>
+          <div class="sbtn" id="sb4" onclick="setSurf(4)"><span class="sbtn-icon">💧</span>Larutan<br><span style="font-size:.44rem;color:#0a5">13× area</span></div>
+          <div class="sbtn" id="sb5" onclick="setSurf(5)"><span class="sbtn-icon">⚗️</span>Koloid<br><span style="font-size:.44rem;color:#0a5">16× area</span></div>
+        </div>
+      </div>
+      <div class="cat-ui">
+        <div class="pt" style="font-size:.56rem;color:#bb77ff;margin-bottom:4px">⚡ Katalis</div>
+        <div class="cat-grid">
+          <div class="cbtn none-cat sel" id="ct0" onclick="setCat(0)"><span style="font-size:.88rem">🚫</span><br>Tanpa</div>
+          <div class="cbtn" id="ct1" onclick="setCat(1)"><span style="font-size:.88rem">🪨</span><br>MnO₂</div>
+          <div class="cbtn" id="ct2" onclick="setCat(2)"><span style="font-size:.88rem">🧬</span><br>Enzim</div>
+          <div class="cbtn" id="ct3" onclick="setCat(3)"><span style="font-size:.88rem">🔩</span><br>Fe₂O₃</div>
+        </div>
+        <div class="cat-note" id="catNote">Tidak ada katalis aktif.</div>
+      </div>
+      <div class="formula-box">
+        HCl + NaOH → NaCl + H₂O + <span style="color:#00ddff">Z-CURE</span>
+        <span class="fval" id="fVal">v = 0.0000 M/s</span>
+        <span class="fstat" id="fStat" style="color:#445">—</span>
+      </div>
+      <div class="status-box">
+        <div class="sb-row"><span class="sb-label">Konsentrasi</span><span class="sb-val" id="sConc" style="color:#445">—</span></div>
+        <div class="sb-row"><span class="sb-label">Suhu</span><span class="sb-val" id="sTemp" style="color:#445">—</span></div>
+        <div class="sb-row"><span class="sb-label">Katalis</span><span class="sb-val" id="sCat" style="color:#445">—</span></div>
+        <div class="sb-row"><span class="sb-label">Bentuk</span><span class="sb-val" id="sSurf" style="color:#445">—</span></div>
+        <div class="sb-row" style="border:none;margin:0;padding:0"><span class="sb-label">VALID?</span><span class="sb-val" id="sValid" style="color:#445">—</span></div>
+      </div>
+      <div class="pt">📊 v vs t</div>
+      <div class="chart-box">
+        <svg id="rc" viewBox="0 0 278 120">
+          <defs>
+            <linearGradient id="cgf" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00dd88" stop-opacity=".3"/><stop offset="100%" stop-color="#00dd88" stop-opacity="0"/></linearGradient>
+            <linearGradient id="vgf" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff2244" stop-opacity=".22"/><stop offset="100%" stop-color="#ff2244" stop-opacity="0"/></linearGradient>
+            <filter id="glo"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <line x1="24" y1="8" x2="24" y2="112" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+          <line x1="24" y1="112" x2="270" y2="112" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+          <path id="cgfp" fill="url(#cgf)"/><path id="vgfp" fill="url(#vgf)"/>
+          <path id="cgl" fill="none" stroke="#00dd88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#glo)"/>
+          <path id="vgl" fill="none" stroke="#ff2244" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#glo)"/>
+          <circle id="cgd" r="3.5" fill="#00dd88" filter="url(#glo)"/>
+          <circle id="vgd" r="3.5" fill="#ff2244" filter="url(#glo)"/>
+        </svg>
+      </div>
+      <div class="leg">
+        <div class="li"><div class="ll" style="background:#00dd88"></div><span style="color:#00dd88">Antivirus</span></div>
+        <div class="li"><div class="ll" style="background:#ff2244"></div><span style="color:#ff2244">Zombie</span></div>
+      </div>
+      <div class="rgrid">
+        <div class="rbox" style="border-color:rgba(0,220,136,.14)"><div class="rv" id="rbC" style="color:#00dd88">0.0000</div><div class="rl" style="color:#225533">ANTIVIRUS M/s</div></div>
+        <div class="rbox" style="border-color:rgba(255,34,68,.14)"><div class="rv" id="rbV" style="color:#ff2244">0.8000</div><div class="rl" style="color:#552233">ZOMBIE M/s</div></div>
+      </div>
+      <div class="pt red">💻 LOG</div>
+      <div class="logbox" id="logbox"><div class="lk i">[SYS] Lab ready.</div></div>
+    </div>
+  </div>
+
+  <div id="mobilePanel" style="display:none">
+    <div class="m-tabs">
+      <div class="m-tab active" onclick="mTab(0)">💧 Konsentrasi</div>
+      <div class="m-tab" onclick="mTab(1)">🌡️ Suhu</div>
+      <div class="m-tab" onclick="mTab(2)">📐 Bentuk</div>
+      <div class="m-tab" onclick="mTab(3)">⚡ Katalis</div>
+      <div class="m-tab" onclick="mTab(4)">📊 Status</div>
+    </div>
+    <div class="m-sec active" id="ms0">
+      <div class="pip-ui">
+        <div class="pt warn" style="font-size:.56rem;margin-bottom:5px">💧 Konsentrasi HCl</div>
+        <div class="pip-row">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div class="pip-bulb" onclick="changeConc(.5)">🫧</div>
+            <div class="pip-tube"><div class="pip-liq" id="pipLiqM" style="height:25%"></div></div>
+          </div>
+          <div style="flex:1">
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.56rem;color:#448;margin-bottom:2px">KONSENTRASI</div>
+            <div class="pip-val" id="vConcM">3.0 <span style="font-size:.6rem">M</span></div>
+          </div>
+        </div>
+        <div class="pip-btns">
+          <button class="pbtn m" onclick="changeConc(-1)">−1M</button>
+          <button class="pbtn m" onclick="changeConc(-.5)">−½M</button>
+          <button class="pbtn p" onclick="changeConc(.5)">+½M</button>
+          <button class="pbtn p" onclick="changeConc(1)">+1M</button>
+        </div>
+      </div>
+      <div class="formula-box">
+        HCl + NaOH → NaCl + H₂O + <span style="color:#00ddff">Z-CURE</span>
+        <span class="fval" id="fValM">v = 0.0000 M/s</span>
+        <span class="fstat" id="fStatM" style="color:#445">—</span>
+      </div>
+      <div class="rgrid">
+        <div class="rbox" style="border-color:rgba(0,220,136,.14)"><div class="rv" id="rbCM" style="color:#00dd88">0.0000</div><div class="rl" style="color:#225533">ANTIVIRUS M/s</div></div>
+        <div class="rbox" style="border-color:rgba(255,34,68,.14)"><div class="rv" id="rbVM" style="color:#ff2244">0.8000</div><div class="rl" style="color:#552233">ZOMBIE M/s</div></div>
+      </div>
+    </div>
+    <div class="m-sec" id="ms1">
+      <div class="temp-ui">
+        <div class="pt warn" style="font-size:.56rem;margin-bottom:5px;color:#ff9944">🌡️ Suhu — GESER DIAL ↑↓</div>
+        <div class="temp-row">
+          <div>
+            <div class="big-dial" id="bigDialM"><div class="big-dial-mark" id="bigMarkM"></div></div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:.36rem;color:#446;text-align:center;margin-top:3px">GESER ↑↓</div>
+          </div>
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span class="hlbl">SUHU TARGET</span>
+              <span class="temp-val" id="vTempM">25°C</span>
+            </div>
+            <div class="tg-track"><div class="tg-fill" id="tgFillM" style="width:25%;background:#4488ff"></div></div>
+            <div class="temp-scale"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+            <div class="temp-hint" id="tempHintM" style="color:#4488ff">Terlalu dingin.</div>
+          </div>
+        </div>
+        <div class="tpre-grid">
+          <button class="tpre" onclick="setTemp(25)">25°C</button>
+          <button class="tpre" onclick="setTemp(40)">40°C</button>
+          <button class="tpre" onclick="setTemp(55)">55°C</button>
+          <button class="tpre" onclick="setTemp(70)">70°C</button>
+          <button class="tpre" onclick="setTemp(85)">85°C</button>
+        </div>
+      </div>
+    </div>
+    <div class="m-sec" id="ms2">
+      <div class="surf-ui">
+        <div class="pt grn" style="font-size:.56rem;margin-bottom:5px">📐 Bentuk Reaktan</div>
+        <div class="surf-grid">
+          <div class="sbtn" id="sb0m" onclick="setSurf(0)"><span class="sbtn-icon">🪨</span>Bongkahan<br><span style="font-size:.44rem;color:#335">1× area</span></div>
+          <div class="sbtn" id="sb1m" onclick="setSurf(1)"><span class="sbtn-icon">⬛</span>Serpihan<br><span style="font-size:.44rem;color:#335">3× area</span></div>
+          <div class="sbtn" id="sb2m" onclick="setSurf(2)"><span class="sbtn-icon">💊</span>Granul<br><span style="font-size:.44rem;color:#335">6× area</span></div>
+          <div class="sbtn sel" id="sb3m" onclick="setSurf(3)"><span class="sbtn-icon">🌫️</span>Bubuk<br><span style="font-size:.44rem;color:#0a5">9× area</span></div>
+          <div class="sbtn" id="sb4m" onclick="setSurf(4)"><span class="sbtn-icon">💧</span>Larutan<br><span style="font-size:.44rem;color:#0a5">13× area</span></div>
+          <div class="sbtn" id="sb5m" onclick="setSurf(5)"><span class="sbtn-icon">⚗️</span>Koloid<br><span style="font-size:.44rem;color:#0a5">16× area</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="m-sec" id="ms3">
+      <div class="cat-ui">
+        <div class="pt" style="font-size:.56rem;color:#bb77ff;margin-bottom:5px">⚡ Katalis</div>
+        <div class="cat-grid">
+          <div class="cbtn none-cat sel" id="ct0m" onclick="setCat(0)"><span style="font-size:.9rem">🚫</span><br>Tanpa</div>
+          <div class="cbtn" id="ct1m" onclick="setCat(1)"><span style="font-size:.9rem">🪨</span><br>MnO₂</div>
+          <div class="cbtn" id="ct2m" onclick="setCat(2)"><span style="font-size:.9rem">🧬</span><br>Enzim</div>
+          <div class="cbtn" id="ct3m" onclick="setCat(3)"><span style="font-size:.9rem">🔩</span><br>Fe₂O₃</div>
+        </div>
+        <div class="cat-note" id="catNoteM">Tidak ada katalis aktif.</div>
+      </div>
+    </div>
+    <div class="m-sec" id="ms4">
+      <div class="status-box">
+        <div class="sb-row"><span class="sb-label">Konsentrasi</span><span class="sb-val" id="sConcM" style="color:#445">—</span></div>
+        <div class="sb-row"><span class="sb-label">Suhu</span><span class="sb-val" id="sTempM" style="color:#445">—</span></div>
+        <div class="sb-row"><span class="sb-label">Katalis</span><span class="sb-val" id="sCatM" style="color:#445">—</span></div>
+        <div class="sb-row"><span class="sb-label">Bentuk</span><span class="sb-val" id="sSurfM" style="color:#445">—</span></div>
+        <div class="sb-row" style="border:none;margin:0;padding:0"><span class="sb-label">VALID?</span><span class="sb-val" id="sValidM" style="color:#445">—</span></div>
+      </div>
+      <div class="logbox" id="logboxM"><div class="lk i">[SYS] Lab ready.</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="sResult">
+  <div id="resBg"></div>
+  <div class="rcard" id="resCard">
+    <span class="re" id="reE">🧬</span>
+    <div class="rtitle" id="reT">—</div>
+    <p class="rdesc" id="reD">—</p>
+    <div class="rsgrid" id="reS"></div>
+    <div class="rhint" id="reH" style="display:none"></div>
+    <button class="btnR" onclick="doReset()">🔁 Coba Lagi</button>
+    <button class="btnOk" id="btnOk" style="display:none" onclick="location.reload()">📋 Selesai</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+let conc=3.0,temp=25,actualT=25,surfIdx=3,catIdx=0;
+let timer=60,running=false,streak=0,failCnt=0,maxCure=0;
+let cArr=[],vArr=[],loopId=null,pourRunning=false;
+const SURF_MULT=[1,3,6,9,13,16];
+const SURF_NAME=['Bongkahan','Serpihan','Granul','Bubuk','Larutan','Koloid'];
+const CAT_NAME=['Tanpa','MnO₂','Enzim','Fe₂O₃'];
+
+function checkMobile(){
+  const m=window.innerWidth<=700;
+  document.getElementById('mobilePanel').style.display=m?'flex':'none';
+}
+checkMobile();
+window.addEventListener('resize',checkMobile);
+
+function mTab(i){
+  document.querySelectorAll('.m-tab').forEach((t,j)=>t.classList.toggle('active',j===i));
+  document.querySelectorAll('.m-sec').forEach((s,j)=>s.classList.toggle('active',j===i));
+}
+
+function validateRules(){
+  const C=conc,T=actualT,S=surfIdx,K=catIdx,r=[];
+  if(C>=10)return{valid:true,reasons:['OK']};
+  if(S===0)r.push('Kondisi bentuk tidak terpenuhi');
+  if(C>=5&&T<=50)r.push('Kondisi suhu tidak terpenuhi');
+  if(C<5&&K===0)r.push('Kondisi katalis tidak terpenuhi');
+  if(K===2&&T>=60)r.push('Kondisi katalis-suhu tidak terpenuhi');
+  return{valid:r.length===0,reasons:r};
+}
+
+function cureRate(){
+  const C=conc,T=actualT,S=surfIdx,K=catIdx;
+  if(!validateRules().valid)return 0;
+  const cF=Math.pow(C,1.4)*0.042;
+  let tF;
+  if(C>=10)tF=0.55+Math.max(0,T-25)*0.004;
+  else if(K===2){if(T<35)tF=0.1+T*0.008;else if(T<55)tF=0.38+(T-35)*0.022;else tF=0.82-(T-55)*0.164;}
+  else tF=Math.max(0,Math.exp((T-25)/30)-0.65);
+  tF=Math.max(0,tF);
+  const sF=Math.log(SURF_MULT[S]+1)*0.30;
+  let cB=0;
+  if(K===1)cB=0.70;else if(K===2)cB=T<60?1.85:0;else if(K===3)cB=0.35+(T-25)*0.012;
+  return Math.max(0,+(0.03+cF+tF+sF+cB).toFixed(4));
+}
+function virusRate(){return+(0.80+((60-timer)/60)*1.50+failCnt*0.38).toFixed(4);}
+
+function setTxt(id,v,c){const e=document.getElementById(id);if(!e)return;if(v!==null)e.textContent=v;if(c)e.style.color=c;}
+function setHtml(id,h){const e=document.getElementById(id);if(e)e.innerHTML=h;}
+
+function updateAll(){
+  const{valid,reasons}=validateRules();
+  const cr=cureRate(),vr=virusRate();
+  const C=conc,T=actualT,K=catIdx,S=surfIdx;
+  const fv='v = '+cr.toFixed(4)+' M/s';
+  const fs=cr>vr?'✅ Antivirus unggul!':(!valid?'❌ Syarat belum terpenuhi':'⚠ Perlu ditingkatkan');
+  const fc=cr>vr?'#00dd88':(!valid?'#ff3344':'#ffaa44');
+  setHtml('fVal',fv);setTxt('fStat',fs);document.getElementById('fStat').style.color=fc;
+  setHtml('fValM',fv);setTxt('fStatM',fs);const fm=document.getElementById('fStatM');if(fm)fm.style.color=fc;
+  setTxt('rbC',cr.toFixed(4));setTxt('rbCM',cr.toFixed(4));
+  setTxt('rbV',vr.toFixed(4));setTxt('rbVM',vr.toFixed(4));
+  setTxt('erlVLabel','v='+cr.toFixed(4)+' M/s');
+  const concTxt=C>=10?'≥10M ✅':C>=5?C.toFixed(1)+'M ⚠':C.toFixed(1)+'M ❌';
+  const concCol=C>=10?'#00dd88':C>=5?'#ffaa44':'#ff6644';
+  const tempOk=C>=10||(C>=5&&T>50&&(K!==2||T<60))||(C<5&&K>0&&(K!==2||T<60));
+  const catOk=C>=10||(C<5&&K>0)||(C>=5);
+  const catEnzOk=!(K===2&&T>=60);
+  const catTxt=(catOk&&catEnzOk)?(K===0?'Tanpa ✅':CAT_NAME[K]+' ✅'):(catOk&&!catEnzOk?'❌ Suhu terlalu tinggi':'❌ Perlu katalis');
+  ['sConc','sConcM'].forEach(id=>setTxt(id,concTxt,concCol));
+  ['sTemp','sTempM'].forEach(id=>setTxt(id,T+'°C '+(tempOk?'✅':'❌'),tempOk?'#00dd88':'#ff3344'));
+  ['sCat','sCatM'].forEach(id=>setTxt(id,catTxt,(catOk&&catEnzOk)?'#00dd88':'#ff3344'));
+  ['sSurf','sSurfM'].forEach(id=>setTxt(id,S===0?'Bongkahan ❌':SURF_NAME[S]+' ✅',S===0?'#ff3344':'#00dd88'));
+  ['sValid','sValidM'].forEach(id=>setTxt(id,valid?'✅ REAKSI VALID':'❌ Cek kondisi!',valid?'#00dd88':'#ff3344'));
+  const pcr=document.getElementById('pcrScr');
+  if(pcr){pcr.textContent=cr>vr?'SYNTH ✓':cr>0?'SLOW':'FAIL';pcr.style.color=cr>vr?'#00ff88':cr>0?'#ffaa00':'#ff3344';}
+}
+
+function changeConc(d){
+  conc=Math.max(0.5,Math.min(12,+(conc+d).toFixed(1)));
+  updateConcUI();triggerPour();updateAll();
+}
+function updateConcUI(){
+  const html=conc.toFixed(1)+' <span style="font-size:.6rem">M</span>';
+  setHtml('vConc',html);setHtml('vConcM',html);
+  const pct=(conc/12*100)+'%';
+  const pl=document.getElementById('pipLiq');if(pl)pl.style.height=pct;
+  const plm=document.getElementById('pipLiqM');if(plm)plm.style.height=pct;
+  document.getElementById('srcConcLbl').textContent=conc.toFixed(1)+' M';
+  const pH=Math.max(0,Math.min(14,+(14+Math.log10(1/(conc*0.8+0.01))).toFixed(2)));
+  setTxt('phScr',pH.toFixed(2));
+  const g0=document.getElementById('srcG0'),g1=document.getElementById('srcG1');
+  if(g0&&g1){if(conc>=10){g0.setAttribute('stop-color','rgba(255,120,50,.85)');g1.setAttribute('stop-color','rgba(200,60,10,.9)');}else{g0.setAttribute('stop-color','rgba(0,180,255,.82)');g1.setAttribute('stop-color','rgba(0,100,180,.9)');}}
+}
+
+let dialDrag=false,dialY0=0,dialT0=25;
+function wireDial(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.addEventListener('mousedown',e=>{dialDrag=true;dialY0=e.clientY;dialT0=temp;e.preventDefault();});
+  el.addEventListener('touchstart',e=>{dialDrag=true;dialY0=e.touches[0].clientY;dialT0=temp;e.preventDefault();},{passive:false});
+}
+wireDial('bigDial');wireDial('bigDialM');
+document.addEventListener('mousemove',e=>{if(!dialDrag)return;const dy=dialY0-e.clientY;temp=Math.max(0,Math.min(100,Math.round((dialT0+dy*0.9)/5)*5));updateTempUI();});
+document.addEventListener('touchmove',e=>{if(!dialDrag)return;const dy=dialY0-e.touches[0].clientY;temp=Math.max(0,Math.min(100,Math.round((dialT0+dy*0.9)/5)*5));updateTempUI();},{passive:true});
+document.addEventListener('mouseup',()=>dialDrag=false);
+document.addEventListener('touchend',()=>dialDrag=false);
+
+function setTemp(t){temp=t;updateTempUI();}
+function updateTempUI(){
+  const pct=temp/100*100;
+  const bg=temp<30?'#4488ff':temp<50?'#88aaee':temp<65?'#44cc66':temp<80?'#ffaa00':'#ff4400';
+  const rot=-150+(temp/100)*300;
+  ['vTemp','vTempM'].forEach(id=>setTxt(id,temp+'°C'));
+  setTxt('hpDisp',temp+' °C');
+  ['tgFill','tgFillM'].forEach(id=>{const e=document.getElementById(id);if(e){e.style.width=pct+'%';e.style.background=bg;}});
+  ['bigMark','bigMarkM'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.transform=`translateX(-50%) rotate(${rot}deg)`;});
+  ['bigDial','bigDialM'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.toggle('hot',temp>45);});
+  document.getElementById('hpSurf').className='hp-surf'+(temp>80?' h3':temp>55?' h2':temp>35?' h1':'');
+  const hint=temp<30?{t:'Terlalu dingin.',c:'#4488ff'}:temp<50?{t:'Belum cukup panas.',c:'#88aaee'}:temp<60?{t:'Zona optimal (enzim aman).',c:'#00cc66'}:temp<70?{t:'Waspada! Cek katalis.',c:'#ffaa00'}:temp<80?{t:'Panas tinggi.',c:'#ff8844'}:{t:'Sangat panas!',c:'#ff4422'};
+  ['tempHint','tempHintM'].forEach(id=>{const e=document.getElementById(id);if(e){e.textContent=hint.t;e.style.color=hint.c;}});
+  updateSmokeVisual();updateAll();
+}
+
+function setSurf(i){
+  surfIdx=i;
+  for(let j=0;j<=5;j++){
+    const a=document.getElementById('sb'+j),b=document.getElementById('sb'+j+'m');
+    if(a)a.classList.toggle('sel',j===i);if(b)b.classList.toggle('sel',j===i);
+  }
+  triggerPour();updateAll();addLog('[BENTUK] '+SURF_NAME[i]+' dipilih.','i');
+}
+
+function setCat(i){
+  catIdx=i;
+  for(let j=0;j<=3;j++){
+    const a=document.getElementById('ct'+j),b=document.getElementById('ct'+j+'m');
+    if(a)a.classList.toggle('sel',j===i);if(b)b.classList.toggle('sel',j===i);
+  }
+  const notes=['Tidak ada katalis aktif.','MnO₂ aktif.','Enzim aktif — perhatikan suhu!','Fe₂O₃ aktif.'];
+  ['catNote','catNoteM'].forEach(id=>setTxt(id,notes[i]));
+  triggerPour();updateAll();addLog('[KATALIS] '+CAT_NAME[i]+' dipilih.','i');
+}
+
+function triggerPour(){
+  if(pourRunning)return;pourRunning=true;
+  const arm=document.getElementById('pourArm'),stream=document.getElementById('liqStream');
+  arm.style.animation='pourAnim 2.8s ease-in-out forwards';
+  stream.classList.add('active');
+  const el=document.getElementById('erlLiq');
+  const curY=parseFloat(el.getAttribute('y')||90);
+  const newY=Math.max(52,curY-5);
+  el.setAttribute('y',newY);el.setAttribute('height',122-newY);
+  const{valid}=validateRules();const cr=cureRate(),vr=virusRate();
+  const eg0=document.getElementById('eg0'),eg1=document.getElementById('eg1');
+  if(eg0&&eg1){
+    if(!valid){eg0.setAttribute('stop-color','rgba(180,0,0,.5)');eg1.setAttribute('stop-color','rgba(100,0,0,.7)');}
+    else if(cr>vr){eg0.setAttribute('stop-color','rgba(0,255,136,.75)');eg1.setAttribute('stop-color','rgba(0,150,70,.9)');}
+    else{eg0.setAttribute('stop-color','rgba(0,180,100,.65)');eg1.setAttribute('stop-color','rgba(0,100,50,.85)');}
+  }
+  setTimeout(()=>{arm.style.animation='';stream.classList.remove('active');pourRunning=false;},2900);
+}
+
+function updateSmokeVisual(){
+  const T=actualT;
+  const sm=document.getElementById('hpSmoke');if(sm){sm.innerHTML='';if(T>40){const ns=Math.min(4,Math.floor((T-35)/15));for(let i=0;i<ns;i++){const d=document.createElement('div');const sz=4+Math.random()*5;d.style.cssText=`width:${sz}px;height:${sz}px;border-radius:50%;background:${T>80?'rgba(255,90,30,.35)':'rgba(195,205,195,.3)'};position:absolute;left:${-4+i*7}px;animation:smokeUp ${1+Math.random()*.5}s ease-out ${i*.18}s infinite`;sm.appendChild(d);}}}
+  const es=document.getElementById('erlSmoke');if(es){es.innerHTML='';if(T>45&&cureRate()>0){for(let i=0;i<3;i++){const d=document.createElement('div');const sz=5+Math.random()*6;d.style.cssText=`width:${sz}px;height:${sz}px;border-radius:50%;background:rgba(200,240,220,.28);position:absolute;left:${-7+i*10}px;animation:smokeUp ${1.2+Math.random()*.6}s ease-out ${i*.22}s infinite`;es.appendChild(d);}}}
+}
+function updateBeakerBubs(){
+  const bb=document.getElementById('hbBubs');if(!bb)return;bb.innerHTML='';
+  const nb=Math.max(0,Math.floor((actualT-30)/12));
+  for(let i=0;i<nb;i++){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',(8+Math.random()*44).toFixed(1));c.setAttribute('cy',(48+Math.random()*28).toFixed(1));c.setAttribute('r',(1.2+Math.random()*2).toFixed(1));c.setAttribute('fill','rgba(150,220,255,.48)');c.style.animation=`bubRise ${.5+Math.random()*.7}s ease-out ${Math.random()*.4}s infinite`;bb.appendChild(c);}
+  const bl=document.getElementById('hbLiq');if(bl){const lv=Math.min(60,12+(actualT/100)*48);bl.setAttribute('y',(79-lv).toFixed(1));bl.setAttribute('height',lv.toFixed(1));}
+}
+function updateErlBubs(){
+  const bb=document.getElementById('erlBubs');if(!bb)return;bb.innerHTML='';
+  const cr=cureRate();if(cr<=0)return;
+  for(let i=0;i<Math.floor(1+cr*2.5);i++){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',(10+Math.random()*80).toFixed(1));c.setAttribute('cy',(75+Math.random()*40).toFixed(1));c.setAttribute('r',(1.5+Math.random()*2.8).toFixed(1));c.setAttribute('fill','rgba(100,255,180,.5)');c.style.animation=`bubRise ${.6+Math.random()*.8}s ease-out ${Math.random()*.5}s infinite`;bb.appendChild(c);}
+}
+
+const CW=270,CH=112,PL=24;
+function drawChart(){
+  const n=cArr.length;if(n<2)return;
+  const mv=Math.max(...cArr,...vArr,2.0);
+  const tx=i=>PL+(i/(n-1))*(CW-PL),ty=v=>CH-((v/mv)*(CH-10));
+  const mkL=a=>a.map((v,i)=>`${i===0?'M':'L'}${tx(i).toFixed(1)},${ty(v).toFixed(1)}`).join(' ');
+  const mkF=a=>{const p=a.map((v,i)=>`${tx(i).toFixed(1)},${ty(v).toFixed(1)}`).join(' L ');return`M${tx(0)},${ty(a[0])} L${p} L${tx(n-1)},${CH} L${tx(0)},${CH} Z`;};
+  document.getElementById('cgl').setAttribute('d',mkL(cArr));
+  document.getElementById('vgl').setAttribute('d',mkL(vArr));
+  document.getElementById('cgfp').setAttribute('d',mkF(cArr));
+  document.getElementById('vgfp').setAttribute('d',mkF(vArr));
+  const lx=tx(n-1);
+  document.getElementById('cgd').setAttribute('cx',lx);document.getElementById('cgd').setAttribute('cy',ty(cArr[n-1]));
+  document.getElementById('vgd').setAttribute('cx',lx);document.getElementById('vgd').setAttribute('cy',ty(vArr[n-1]));
+}
+
+function addLog(msg,cls='i'){
+  ['logbox','logboxM'].forEach(id=>{
+    const l=document.getElementById(id);if(!l)return;
+    const d=document.createElement('div');d.className='lk '+cls;d.textContent=msg;
+    l.appendChild(d);l.scrollTop=l.scrollHeight;
+    while(l.children.length>30)l.removeChild(l.firstChild);
+  });
+}
+
+function setDanger(cr,vr){
+  const gap=vr-cr;
+  const door=document.getElementById('doorEl');door.className='door-el';
+  if(gap<=0){setTxt('hudDoor','✅ MENANG!','#00dd88');document.getElementById('vig').style.background='';document.getElementById('doorCrack').style.opacity='0';}
+  else if(gap<0.35){door.classList.add('ds1');setTxt('hudDoor','🚪 GEDORAN RINGAN','#ffbb00');document.getElementById('vig').style.background='radial-gradient(ellipse,transparent 40%,rgba(120,0,0,.18) 80%)';document.getElementById('doorCrack').style.opacity='.2';document.getElementById('zC').style.display='block';document.getElementById('winFog').style.background='rgba(12,4,0,.7)';}
+  else if(gap<1.0){door.classList.add('ds2');setTxt('hudDoor','🚨 GEDORAN KERAS!','#ff8800');document.getElementById('vig').style.background='radial-gradient(ellipse,transparent 20%,rgba(160,0,0,.42) 68%,rgba(210,0,0,.55))';document.getElementById('doorCrack').style.opacity='.65';if(Math.random()<.08){document.getElementById('bflash').style.opacity='.06';setTimeout(()=>document.getElementById('bflash').style.opacity='0',180);}}
+  else{door.classList.add('ds3');setTxt('hudDoor','💥 HAMPIR MASUK!!','#ff1a1a');document.getElementById('vig').style.background='radial-gradient(ellipse,transparent 5%,rgba(190,0,0,.56) 50%,rgba(255,0,0,.76))';document.getElementById('doorCrack').style.opacity='1';if(Math.random()<.25){document.getElementById('bflash').style.opacity='.12';setTimeout(()=>document.getElementById('bflash').style.opacity='0',200);}}
+}
+
+let AC=null;const getAC=()=>{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();return AC;};
+let audioRunning=false;
+function startAudio(){audioRunning=true;loopGroans();loopBangs();}
+function stopAudio(){audioRunning=false;}
+function loopGroans(){
+  if(!audioRunning)return;
+  const cr=running?cureRate():0,vr=running?virusRate():0.8,gap=Math.max(0,vr-cr);
+  const vol=Math.min(0.18,0.045+gap*0.035+failCnt*0.018),freq=Math.max(45,95-gap*12-failCnt*5)+Math.random()*18,dur=1.2+Math.random()*0.8;
+  playGroan(freq,dur,vol);
+  if(gap>0.5||Math.random()<0.4)setTimeout(()=>{if(audioRunning)playGroan(freq*(0.6+Math.random()*0.3),dur*0.8,vol*0.7);},400+Math.random()*500);
+  setTimeout(loopGroans,gap<=0?3500+Math.random()*2000:Math.max(800,3200-gap*800-failCnt*180)+Math.random()*600);
+}
+function playGroan(freq,dur,vol){
+  try{
+    const a=getAC(),osc=a.createOscillator(),dist=a.createWaveShaper(),g=a.createGain();
+    const cv=new Float32Array(512);for(let i=0;i<512;i++){const x=i*2/512-1;cv[i]=x*(1+200*Math.abs(x))/(1+100*Math.abs(x));}
+    dist.curve=cv;osc.type='sawtooth';
+    osc.frequency.setValueAtTime(freq,a.currentTime);osc.frequency.linearRampToValueAtTime(freq*(0.65+Math.random()*0.15),a.currentTime+dur*0.55);osc.frequency.linearRampToValueAtTime(freq*0.5,a.currentTime+dur*0.85);
+    g.gain.setValueAtTime(0,a.currentTime);g.gain.linearRampToValueAtTime(vol,a.currentTime+0.06);g.gain.setValueAtTime(vol,a.currentTime+dur*0.65);g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
+    const sub=a.createOscillator(),sg=a.createGain();sub.type='sine';sub.frequency.value=freq*0.45;
+    sg.gain.setValueAtTime(vol*0.5,a.currentTime);sg.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
+    sub.connect(sg);sg.connect(a.destination);sub.start(a.currentTime);sub.stop(a.currentTime+dur);
+    osc.connect(dist);dist.connect(g);g.connect(a.destination);osc.start(a.currentTime);osc.stop(a.currentTime+dur);
+  }catch(e){}
+}
+function loopBangs(){
+  if(!audioRunning)return;
+  const cr=running?cureRate():0,vr=running?virusRate():0.8,gap=Math.max(0,vr-cr);
+  playBang(Math.min(1.0,gap*0.6+failCnt*0.15));
+  setTimeout(loopBangs,gap<=0?5000+Math.random()*3000:Math.max(500,4000-gap*1200-failCnt*200)+Math.random()*400);
+}
+function playBang(force){
+  if(force<0.05)return;
+  try{
+    const a=getAC(),vol=0.15+force*0.65;
+    const buf=a.createBuffer(1,Math.floor(a.sampleRate*0.6),a.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++){const t=i/a.sampleRate;d[i]=(Math.random()*2-1)*Math.exp(-t*(8+force*6))*vol*(Math.sin(2*Math.PI*42*t)*.7+Math.sin(2*Math.PI*22*t)*.3);}
+    const s=a.createBufferSource(),g=a.createGain();s.buffer=buf;g.gain.value=1;s.connect(g);g.connect(a.destination);s.start();
+    const osc=a.createOscillator(),og=a.createGain();osc.type='sawtooth';
+    osc.frequency.setValueAtTime(140+force*60,a.currentTime+0.05);osc.frequency.exponentialRampToValueAtTime(28,a.currentTime+0.5);
+    og.gain.setValueAtTime(vol*0.25,a.currentTime+0.05);og.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+0.55);
+    osc.connect(og);og.connect(a.destination);osc.start(a.currentTime+0.05);osc.stop(a.currentTime+0.6);
+  }catch(e){}
+}
+function sfxWin(){stopAudio();try{const a=getAC();[440,554,660,880,1108].forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f;const t=a.currentTime+i*.1;g.gain.setValueAtTime(.14,t);g.gain.exponentialRampToValueAtTime(.0001,t+.7);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+.7);});}catch(e){}}
+function sfxLose(){stopAudio();try{const a=getAC();playBang(1.0);setTimeout(()=>{const o=a.createOscillator(),g=a.createGain();o.type='sawtooth';o.frequency.setValueAtTime(180,a.currentTime);o.frequency.exponentialRampToValueAtTime(35,a.currentTime+1.5);g.gain.setValueAtTime(.22,a.currentTime);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+1.8);o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+1.8);},200);}catch(e){}}
+
+function tick(){
+  if(!running)return;
+  timer--;
+  if(Math.abs(actualT-temp)<2)actualT=temp;else if(actualT<temp)actualT=Math.min(temp,actualT+3);else actualT=Math.max(temp,actualT-2);
+  const mm=String(Math.floor(timer/60)).padStart(2,'0'),ss=String(timer%60).padStart(2,'0');
+  const te=document.getElementById('hudT');te.textContent=mm+':'+ss;te.classList.toggle('red',timer<=12);
+  const cr=cureRate(),vr=virusRate();
+  cArr.push(cr);vArr.push(vr);if(cArr.length>50){cArr.shift();vArr.shift();}
+  if(cr>maxCure)maxCure=cr;
+  document.getElementById('hfC').style.width=Math.min(100,(cr/6)*100)+'%';
+  document.getElementById('hfV').style.width=Math.min(100,(vr/3.5)*100)+'%';
+  drawChart();setDanger(cr,vr);updateBeakerBubs();updateSmokeVisual();updateErlBubs();updateAll();
+  if(cr>vr){streak++;setTxt('hudSt',streak+'s','#00dd88');if(streak===3)addLog('✅ Antivirus mengungguli!','ok');if(streak>=10){endGame(true);return;}}
+  else{if(streak>=4){failCnt++;addLog(`⚠ Streak putus! Zombie lebih agresif (×${failCnt}).`,'w');}streak=0;setTxt('hudSt','0s','#334');}
+  if(timer%15===0&&cr<vr){const{valid}=validateRules();if(!valid)addLog('[!] Ada kondisi belum terpenuhi.','e');else addLog('[!] Kondisi valid tapi laju kurang — coba kombinasi lain.','w');}
+  if(timer<=0)endGame(false);
+}
+
+function startGame(){
+  timer=60;running=true;streak=0;failCnt=0;maxCure=0;actualT=temp;cArr=[];vArr=[];pourRunning=false;
+  setTxt('hudT','01:00');document.getElementById('hudT').classList.remove('red');
+  setTxt('hudSt','0s','#334');
+  document.getElementById('hfC').style.width='0%';document.getElementById('hfV').style.width='18%';
+  setTxt('hudDoor','🚪 AMAN','#334');
+  document.getElementById('doorEl').className='door-el';document.getElementById('doorCrack').style.opacity='0';
+  document.getElementById('vig').style.background='';document.getElementById('bflash').style.opacity='0';
+  document.getElementById('zC').style.display='none';document.getElementById('winFog').style.background='';
+  ['logbox','logboxM'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<div class="lk i">[SYS] Sintesis dimulai! 60 detik.</div><div class="lk e">[ZOMBIE] Kawanan di luar!</div>';});
+  ['cgl','vgl','cgfp','vgfp'].forEach(id=>document.getElementById(id).setAttribute('d',''));
+  const el=document.getElementById('erlLiq');el.setAttribute('y','90');el.setAttribute('height','32');
+  updateAll();updateConcUI();updateTempUI();
+  if(loopId)clearInterval(loopId);loopId=setInterval(tick,1000);
+  stopAudio();setTimeout(()=>startAudio(),300);
+  document.getElementById('sIntro').classList.remove('show');document.getElementById('sGame').classList.add('show');
+}
+
+function endGame(win){
+  running=false;stopAudio();clearInterval(loopId);loopId=null;
+  const bg=document.getElementById('resBg'),card=document.getElementById('resCard');
+  if(win){
+    sfxWin();bg.className='rb-w';card.className='rcard rc-w';
+    setTxt('reE','🧬');setHtml('reT','<span style="color:#00dd88">ANTIVIRUS BERHASIL!</span>');
+    setTxt('reD','Kamu berhasil mensintesis antivirus! Zombie dihentikan dan umat manusia selamat.');
+    setHtml('reS',`<div class="rs"><div class="rsv" style="color:#00dd88">${timer}s</div><div class="rsl">WAKTU SISA</div></div><div class="rs"><div class="rsv" style="color:#00aaff">${maxCure.toFixed(4)}</div><div class="rsl">LAJU MAKS</div></div><div class="rs"><div class="rsv" style="color:#ffd700">${conc}M / ${temp}°C</div><div class="rsl">KONDISI</div></div><div class="rs"><div class="rsv" style="color:#bb88ff">${CAT_NAME[catIdx]}</div><div class="rsl">KATALIS</div></div>`);
+    document.getElementById('reH').style.display='none';document.getElementById('btnOk').style.display='inline-block';
+  } else {
+    sfxLose();bg.className='rb-l';card.className='rcard rc-l';
+    setTxt('reE','🧟');setHtml('reT','<span style="color:#ff2244">ZOMBIE MASUK!</span>');
+    setTxt('reD','Laju antivirus tidak cukup. Analisis kondisi dan coba lagi!');
+    const{valid,reasons}=validateRules();
+    let h='💡 <strong>Hint terakhir:</strong><br>';
+    if(!valid)h+='❌ '+reasons.join('<br>❌ ')+'<br><br>';
+    h+='Coba ubah kombinasi variabel dan perhatikan apa yang berubah.';
+    setHtml('reH',h);document.getElementById('reH').style.display='block';document.getElementById('btnOk').style.display='none';
+  }
+  document.getElementById('sGame').classList.remove('show');document.getElementById('sResult').classList.add('show');
+}
+
+function doReset(){
+  conc=3.0;temp=25;actualT=25;surfIdx=3;catIdx=0;timer=60;running=false;streak=0;failCnt=0;maxCure=0;cArr=[];vArr=[];pourRunning=false;
+  stopAudio();if(loopId){clearInterval(loopId);loopId=null;}
+  updateConcUI();updateTempUI();setSurf(3);setCat(0);
+  setTxt('hudT','01:00');document.getElementById('hudT').classList.remove('red');setTxt('hudSt','0s','#334');
+  document.getElementById('hfC').style.width='0%';document.getElementById('hfV').style.width='18%';
+  setTxt('hudDoor','🚪 AMAN','#334');
+  document.getElementById('doorEl').className='door-el';document.getElementById('doorCrack').style.opacity='0';
+  document.getElementById('vig').style.background='';document.getElementById('bflash').style.opacity='0';
+  document.getElementById('zC').style.display='none';document.getElementById('winFog').style.background='';
+  const el=document.getElementById('erlLiq');el.setAttribute('y','90');el.setAttribute('height','32');
+  document.getElementById('erlBubs').innerHTML='';document.getElementById('erlSmoke').innerHTML='';
+  document.getElementById('hbBubs').innerHTML='';document.getElementById('hpSmoke').innerHTML='';
+  document.getElementById('hpSurf').className='hp-surf';
+  ['cgl','vgl','cgfp','vgfp'].forEach(id=>document.getElementById(id).setAttribute('d',''));
+  ['logbox','logboxM'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='<div class="lk i">[SYS] Lab ready.</div>';});
+  document.getElementById('pourArm').style.animation='';document.getElementById('liqStream').classList.remove('active');
+  updateAll();mTab(0);
+  document.getElementById('sResult').classList.remove('show');document.getElementById('sGame').classList.remove('show');document.getElementById('sIntro').classList.add('show');
+}
+
+(()=>{
+  const c=document.getElementById('dripBar');
+  for(let i=0;i<14;i++){const d=document.createElement('div');d.className='drip';d.style.cssText=`left:${(i/14*100)+2}%;height:${18+Math.random()*58}px;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*2}s`;c.appendChild(d);}
+  const cc=document.getElementById('cabCtr');
+  if(cc){cc.style.display='flex';cc.style.height='100%';for(let i=0;i<9;i++){cc.innerHTML+=`<div style="flex:1;border-right:1.5px solid #98aabc;position:relative"><div style="position:absolute;top:50%;right:8px;width:8px;height:8px;border-radius:50%;background:radial-gradient(#ccc,#888);transform:translateY(-50%)"></div></div>`;}}
+  const w=document.getElementById('benchBtls');
+  [{l:'HCl',c:'#1a6699',h:48},{l:'NaOH',c:'#cc8800',h:40},{l:'H₂O',c:'#3399bb',h:44},{l:'EtOH',c:'#338833',h:40}].forEach(b=>{
+    const d=document.createElement('div');d.style.cssText='display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .2s';
+    d.innerHTML=`<div style="width:17px;height:${b.h}px;background:linear-gradient(${b.c}cc,${b.c}77);border-radius:3px 3px 0 0;border:1.5px solid ${b.c};position:relative;overflow:hidden"><div style="position:absolute;top:3px;left:2px;right:2px;height:4px;background:rgba(255,255,255,.2);border-radius:1px"></div></div><div style="width:14px;height:3px;background:#778;border-radius:0 0 2px 2px"></div><div style="font-size:.3rem;background:rgba(255,255,255,.9);color:#111;padding:1px 2px;border-radius:1px;margin-top:1px;font-family:monospace;font-weight:700">${b.l}</div>`;
+    d.onmouseenter=()=>d.style.transform='translateY(-5px) scale(1.08)';d.onmouseleave=()=>d.style.transform='';w.appendChild(d);
+  });
+  const st=document.createElement('style');
+  st.textContent='@keyframes bubRise{0%{transform:translateY(0);opacity:.8}100%{transform:translateY(-40px);opacity:0}}@keyframes smokeUp{0%{transform:translateY(0) scale(1);opacity:.45}100%{transform:translateY(-55px) scale(2.5);opacity:0}}@keyframes specLine{0%,100%{height:30%}50%{height:88%}}';
+  document.head.appendChild(st);
+})();
+function showScreen(id) {
+    // Sembunyikan semua screen (kode asli kamu)
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('show'));
+    
+    // Tampilkan screen yang dipilih (kode asli kamu)
+    const target = document.getElementById(id);
+    if(target) target.classList.add('show');
+
+    // --- TAMBAHKAN LOGIKA INI ---
+    const backBtn = document.getElementById('btn-back-home');
+    if (id === 'sIntro') {
+        backBtn.style.display = 'none'; // Sembunyi jika di landing page
+    } else {
+        backBtn.style.display = 'flex'; // Muncul di halaman lain (Lab/Quiz/Result)
+    }
+    // ----------------------------
+}
+document.getElementById('btnStart').addEventListener('click',startGame);
+updateConcUI();updateTempUI();setSurf(3);setCat(0);
+</script>
+</body>
+</html>

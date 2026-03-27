@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BioHalt – Reflection</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<script type="module">
+  import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, push, onValue, update, remove, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyB4Arz9OYGjr8XL5LPKFZdl_6t7AzZskwM",
+    authDomain:        "biohalt-kinetics.firebaseapp.com",
+    databaseURL:       "https://biohalt-kinetics-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId:         "biohalt-kinetics",
+    storageBucket:     "biohalt-kinetics.firebasestorage.app",
+    messagingSenderId: "256776318474",
+    appId:             "1:256776318474:web:ca4544ef0730b7d76b39f3"
+  };
+
+  // 🔐 GANTI KODE GURU DI SINI
+  const GURU_CODE = "BIOHALT2025";
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  const $  = id => document.getElementById(id);
+  const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+  function showPage(id) {
+    document.querySelectorAll(".page").forEach(p => p.style.display = "none");
+    const el = $(id);
+    if (el) { el.style.display = "flex"; el.style.animation = "fadeIn .4s ease"; }
+  }
+
+  function toast(msg, type="ok") {
+    const t = $("toast");
+    t.textContent = msg;
+    t.className = "toast show " + type;
+    clearTimeout(t._t);
+    t._t = setTimeout(() => t.className = "toast", 3000);
+  }
+
+  function shake(el) {
+    el.style.animation = "shake .4s ease";
+    setTimeout(() => el.style.animation = "", 400);
+  }
+
+  function launchConfetti() {
+    const colors = ["#00ff88","#00cfff","#ffd700","#ff6b00","#ffffff"];
+    for (let i = 0; i < 80; i++) {
+      const el = document.createElement("div");
+      el.className = "confetti-piece";
+      el.style.cssText = `left:${Math.random()*100}vw;background:${colors[Math.floor(Math.random()*colors.length)]};
+        animation-delay:${Math.random()*1.5}s;animation-duration:${Math.random()+1.5}s;
+        width:${Math.random()*8+4}px;height:${Math.random()*8+4}px;
+        border-radius:${Math.random()>.5?"50%":"2px"};`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    showPage("page-home");
+
+    $("btn-siswa").addEventListener("click", () => showPage("page-login-siswa"));
+    $("btn-guru").addEventListener("click",  () => showPage("page-gate-guru"));
+    $("back-home-1").addEventListener("click", () => showPage("page-home"));
+    $("back-home-2").addEventListener("click", () => showPage("page-home"));
+
+    // ════════════════ SISWA FLOW ════════════════
+    let studentName = "", studentClass = "", submitted = false;
+
+    $("btn-login-siswa").addEventListener("click", () => {
+      const name  = $("inp-nama").value.trim();
+      const kelas = $("inp-kelas").value.trim();
+      if (!name || !kelas) { toast("Lengkapi nama dan kelas!","err"); shake($("btn-login-siswa")); return; }
+      studentName = name; studentClass = kelas;
+      $("greeting-name").textContent = name;
+      showPage("page-form-siswa");
+    });
+
+    document.querySelectorAll(".star-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const v = parseInt(btn.dataset.val);
+        document.querySelectorAll(".star-btn").forEach((b,i) => b.classList.toggle("active", i < v));
+        const labels = ["","Belum Paham 😕","Sedikit Paham 🤔","Cukup Paham 😊","Paham Banget 😄","Sangat Paham! 🔥"];
+        $("rating-label").textContent = labels[v];
+        updateProgress();
+      });
+    });
+
+    document.querySelectorAll(".mood-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        updateProgress();
+      });
+    });
+
+    ["q-learned","q-difficult","q-apply"].forEach(id => {
+      $(id)?.addEventListener("input", () => {
+        const len = $(id).value.length;
+        const c = $(id+"-count");
+        if (c) { c.textContent = len+" karakter"; c.style.color = len<20?"#ff6b6b":"rgba(255,255,255,.3)"; }
+        updateProgress();
+      });
+    });
+
+    function updateProgress() {
+      let f = 0;
+      ["q-learned","q-difficult","q-apply"].forEach(id => { if($(id)?.value.trim().length>10) f++; });
+      if (document.querySelector(".star-btn.active")) f++;
+      if (document.querySelector(".mood-btn.active")) f++;
+      const pct = Math.round(f/5*100);
+      const fill = $("prog-fill"), pctEl = $("prog-pct");
+      if (fill)  fill.style.width = pct+"%";
+      if (pctEl) pctEl.textContent = pct+"%";
+    }
+
+    $("btn-submit-siswa").addEventListener("click", async () => {
+      if (submitted) return;
+      const learned   = $("q-learned").value.trim();
+      const difficult = $("q-difficult").value.trim();
+      const apply     = $("q-apply").value.trim();
+      const star      = document.querySelector(".star-btn.active");
+      const mood      = document.querySelector(".mood-btn.active");
+      if (!learned||!difficult||!apply) { toast("Jawab semua pertanyaan!","err"); shake($("btn-submit-siswa")); return; }
+      if (!star) { toast("Pilih rating pemahaman!","err"); return; }
+      if (!mood) { toast("Pilih mood kamu!","err"); return; }
+      if (learned.length<20) { toast("Jawaban terlalu singkat!","err"); return; }
+      const btn = $("btn-submit-siswa");
+      btn.disabled = true; btn.textContent = "Mengirim...";
+      try {
+        await push(ref(db,"reflections"), {
+          nama: studentName, kelas: studentClass,
+          q_learned: learned, q_difficult: difficult, q_apply: apply,
+          rating: parseInt(star.dataset.val), mood: mood.dataset.val,
+          timestamp: serverTimestamp(), status: "pending"
+        });
+        submitted = true;
+        showPage("page-sukses");
+        launchConfetti();
+      } catch(e) {
+        toast("Gagal kirim. Cek internet!","err");
+        btn.disabled = false; btn.textContent = "Kirim Refleksi 🚀";
+      }
+    });
+
+    $("btn-kirim-lagi").addEventListener("click", () => {
+      submitted = false;
+      $("inp-nama").value = ""; $("inp-kelas").value = "";
+      ["q-learned","q-difficult","q-apply"].forEach(id => { if($(id)) $(id).value=""; });
+      document.querySelectorAll(".star-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".mood-btn").forEach(b => b.classList.remove("active"));
+      $("rating-label").textContent = "—";
+      updateProgress();
+      showPage("page-home");
+    });
+
+    // ════════════════ GURU FLOW ════════════════
+    let allData={}, filterClass="all", filterStatus="all", sortBy="newest", notifOn=false;
+
+    $("toggle-code").addEventListener("click", () => {
+      const inp = $("inp-guru-code");
+      inp.type = inp.type==="password" ? "text" : "password";
+      $("toggle-code").textContent = inp.type==="password" ? "👁" : "🙈";
+    });
+
+    $("btn-masuk-guru").addEventListener("click", () => verifyGuru());
+    $("inp-guru-code").addEventListener("keydown", e => { if(e.key==="Enter") verifyGuru(); });
+
+    function verifyGuru() {
+      if ($("inp-guru-code").value.trim() === GURU_CODE) {
+        showPage("page-dashboard-guru");
+        initGuru();
+      } else {
+        $("gate-err").textContent = "❌ Kode salah! Coba lagi.";
+        shake($("inp-guru-code"));
+        $("inp-guru-code").style.borderColor = "#ff6b6b";
+        setTimeout(() => { $("inp-guru-code").style.borderColor=""; }, 600);
+      }
+    }
+
+    let guruInited = false;
+    function initGuru() {
+      if (guruInited) return;
+      guruInited = true;
+      requestNotif();
+      onValue(ref(db,"reflections"), snap => {
+        const prev = Object.keys(allData).length;
+        allData = snap.val() || {};
+        const curr = Object.keys(allData).length;
+        if (curr > prev && prev > 0 && notifOn) {
+          new Notification("BioHalt 🔔", { body:"Refleksi baru masuk!" });
+          playPing();
+        }
+        renderGuru();
+      });
+      $("filter-class").addEventListener("change",  e => { filterClass  = e.target.value; renderGuru(); });
+      $("filter-status").addEventListener("change", e => { filterStatus = e.target.value; renderGuru(); });
+      $("sort-by").addEventListener("change",       e => { sortBy       = e.target.value; renderGuru(); });
+      $("search-box").addEventListener("input",     () => renderGuru());
+      $("btn-export-excel").addEventListener("click", exportExcel);
+      $("btn-export-pdf").addEventListener("click",   exportPDF);
+      $("btn-logout-guru").addEventListener("click", () => {
+        guruInited = false;
+        $("inp-guru-code").value = "";
+        $("gate-err").textContent = "";
+        showPage("page-home");
+      });
+    }
+
+    function renderGuru() {
+      let entries = Object.entries(allData).map(([id,d]) => ({id,...d}));
+      const q = $("search-box").value.toLowerCase();
+      if (q) entries = entries.filter(e => e.nama?.toLowerCase().includes(q)||e.kelas?.toLowerCase().includes(q));
+      if (filterClass  !== "all") entries = entries.filter(e => e.kelas === filterClass);
+      if (filterStatus !== "all") entries = entries.filter(e => e.status === filterStatus);
+      entries.sort((a,b) => {
+        if (sortBy==="newest") return (b.timestamp||0)-(a.timestamp||0);
+        if (sortBy==="oldest") return (a.timestamp||0)-(b.timestamp||0);
+        if (sortBy==="name")   return (a.nama||"").localeCompare(b.nama||"");
+        if (sortBy==="rating") return (b.rating||0)-(a.rating||0);
+        return 0;
+      });
+      const total    = Object.keys(allData).length;
+      const reviewed = Object.values(allData).filter(d=>d.status==="reviewed").length;
+      const avgRating= total?(Object.values(allData).reduce((s,d)=>s+(d.rating||0),0)/total).toFixed(1):"–";
+      $("stat-total").textContent    = total;
+      $("stat-pending").textContent  = total-reviewed;
+      $("stat-reviewed").textContent = reviewed;
+      $("stat-avg").textContent      = avgRating;
+      $("result-count").textContent  = entries.length+" data";
+      const classes = [...new Set(Object.values(allData).map(d=>d.kelas).filter(Boolean))].sort();
+      const sel = $("filter-class"), cur = sel.value;
+      sel.innerHTML = '<option value="all">Semua Kelas</option>' +
+        classes.map(c=>`<option value="${c}" ${c===cur?"selected":""}>${c}</option>`).join("");
+      const box = $("cards-box");
+      if (!entries.length) {
+        box.innerHTML = `<div class="empty-state"><div style="font-size:48px;margin-bottom:12px">📭</div><div>Belum ada refleksi masuk</div><div style="font-size:12px;opacity:.5;margin-top:6px">Data muncul otomatis saat siswa submit</div></div>`;
+        return;
+      }
+      box.innerHTML = entries.map(e => buildCard(e)).join("");
+      box.querySelectorAll(".btn-expand").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const body = $("body-"+btn.dataset.id);
+          const open = body.style.display !== "none";
+          body.style.display = open ? "none" : "block";
+          btn.textContent = open ? "▼ Lihat Detail" : "▲ Sembunyikan";
+        });
+      });
+      box.querySelectorAll(".btn-review").forEach(btn =>
+        btn.addEventListener("click", () => markReviewed(btn.dataset.id, btn.dataset.status)));
+      box.querySelectorAll(".btn-comment-save").forEach(btn =>
+        btn.addEventListener("click", () => saveComment(btn.dataset.id)));
+      box.querySelectorAll(".btn-delete").forEach(btn =>
+        btn.addEventListener("click", () => deleteEntry(btn.dataset.id, btn.dataset.name)));
+    }
+
+    function buildCard(e) {
+      const date = e.timestamp ? new Date(e.timestamp).toLocaleString("id-ID") : "–";
+      const stars = "⭐".repeat(e.rating||0)+"☆".repeat(5-(e.rating||0));
+      const ok = e.status==="reviewed";
+      const moodMap = {Bingung:"😕",Biasa:"😐",Senang:"😊",Semangat:"🔥",Bangga:"🏆"};
+      return `
+      <div class="d-card ${ok?"d-card-ok":"d-card-pending"}">
+        <div class="d-card-head">
+          <div class="d-student">
+            <div class="d-avatar">${(e.nama||"?")[0].toUpperCase()}</div>
+            <div>
+              <div class="d-name">${esc(e.nama)}</div>
+              <div class="d-meta">${esc(e.kelas)} · ${date}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="badge ${ok?"badge-ok":"badge-pending"}">${ok?"✅ Direview":"🕐 Pending"}</span>
+            <span class="mood-tag">${moodMap[e.mood]||"❓"} ${esc(e.mood)}</span>
+          </div>
+        </div>
+        <div class="d-stars">${stars} <span class="d-rating-num">${e.rating||0}/5</span></div>
+        <button class="btn-expand" data-id="${e.id}">▼ Lihat Detail</button>
+        <div id="body-${e.id}" style="display:none;margin-top:14px;">
+          <div class="qa-block"><div class="qa-lbl">💡 Yang Dipahami</div><div class="qa-txt">${esc(e.q_learned)}</div></div>
+          <div class="qa-block"><div class="qa-lbl">🤔 Yang Masih Sulit</div><div class="qa-txt">${esc(e.q_difficult)}</div></div>
+          <div class="qa-block"><div class="qa-lbl">🌍 Contoh Sehari-hari</div><div class="qa-txt">${esc(e.q_apply)}</div></div>
+          ${e.teacher_comment?`<div class="qa-block existing-cmt"><div class="qa-lbl">💬 Komentar Guru</div><div class="qa-txt">${esc(e.teacher_comment)}</div></div>`:""}
+          <div class="comment-area">
+            <div class="qa-lbl" style="margin-bottom:6px">✏️ Tambah / Edit Komentar</div>
+            <textarea class="comment-input" id="cmt-${e.id}" placeholder="Feedback atau nilai untuk siswa...">${esc(e.teacher_comment||"")}</textarea>
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+              <button class="btn-sm btn-comment-save" data-id="${e.id}">💾 Simpan</button>
+              <button class="btn-sm btn-review ${ok?"btn-unmark":"btn-mark"}" data-id="${e.id}" data-status="${e.status}">${ok?"↩ Batal Review":"✅ Tandai Direview"}</button>
+              <button class="btn-sm btn-delete" data-id="${e.id}" data-name="${esc(e.nama)}">🗑 Hapus</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    async function markReviewed(id, status) {
+      await update(ref(db,`reflections/${id}`), { status: status==="reviewed"?"pending":"reviewed" });
+    }
+    async function saveComment(id) {
+      const cmt = $(`cmt-${id}`)?.value.trim();
+      if (!cmt) return;
+      await update(ref(db,`reflections/${id}`), { teacher_comment: cmt, status:"reviewed" });
+      toast("Komentar tersimpan! ✅");
+    }
+    async function deleteEntry(id, name) {
+      if (!confirm(`Hapus refleksi dari "${name}"?`)) return;
+      await remove(ref(db,`reflections/${id}`));
+      toast("Data dihapus.");
+    }
+
+    function exportExcel() {
+      const rows = [["No","Nama","Kelas","Rating","Mood","Yang Dipahami","Yang Sulit","Contoh","Komentar Guru","Status","Waktu"]];
+      Object.values(allData).forEach((d,i) => rows.push([
+        i+1,d.nama||"",d.kelas||"",d.rating||"",d.mood||"",
+        d.q_learned||"",d.q_difficult||"",d.q_apply||"",
+        d.teacher_comment||"",d.status||"",
+        d.timestamp?new Date(d.timestamp).toLocaleString("id-ID"):""
+      ]));
+      const csv = "\uFEFF"+rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
+      a.download = `BioHalt_Refleksi_${new Date().toLocaleDateString("id-ID").replace(/\//g,"-")}.csv`;
+      a.click();
+      toast("File Excel berhasil diunduh!");
+    }
+
+    function exportPDF() {
+      const w = window.open("","_blank");
+      const rows = Object.values(allData).map((d,i)=>`
+        <tr><td>${i+1}</td><td>${d.nama||""}</td><td>${d.kelas||""}</td>
+        <td>${"★".repeat(d.rating||0)}</td><td>${d.mood||""}</td>
+        <td>${d.q_learned||""}</td><td>${d.q_difficult||""}</td><td>${d.q_apply||""}</td>
+        <td>${d.teacher_comment||"–"}</td><td>${d.status==="reviewed"?"✅":"🕐"}</td></tr>`).join("");
+      w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>BioHalt Refleksi</title>
+        <style>body{font-family:Arial;font-size:11px;padding:20px;}
+        table{width:100%;border-collapse:collapse;}
+        th{background:#0a2a1a;color:#00ff88;padding:8px 6px;text-align:left;}
+        td{padding:7px 6px;border-bottom:1px solid #eee;vertical-align:top;}
+        tr:nth-child(even){background:#f9f9f9;}</style></head>
+        <body><h2>BioHalt: Kinetics Protocol – Data Refleksi Siswa</h2>
+        <p>Dicetak: ${new Date().toLocaleString("id-ID")} · Total: ${Object.keys(allData).length} siswa</p>
+        <table><thead><tr><th>#</th><th>Nama</th><th>Kelas</th><th>Rating</th><th>Mood</th>
+        <th>Yang Dipahami</th><th>Yang Sulit</th><th>Contoh</th><th>Komentar Guru</th><th>Status</th>
+        </tr></thead><tbody>${rows}</tbody></table>
+        <script>setTimeout(()=>window.print(),500);<\/script></body></html>`);
+      w.document.close();
+    }
+
+    function requestNotif() {
+      if (!("Notification" in window)) return;
+      Notification.requestPermission().then(p => { notifOn = p==="granted"; });
+    }
+    function playPing() {
+      try {
+        const ctx = new (window.AudioContext||window.webkitAudioContext)();
+        const o=ctx.createOscillator(), g=ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.setValueAtTime(880,ctx.currentTime);
+        g.gain.setValueAtTime(0.2,ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.6);
+        o.start(); o.stop(ctx.currentTime+0.6);
+      } catch(e){}
+    }
+  });
+</script>
+
+<style>
+:root{
+  --green:#00ff88; --blue:#00cfff; --orange:#ff6b00;
+  --black:#050008; --yellow:#ffd700;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:var(--black); font-family:'Rajdhani',sans-serif;
+  min-height:100vh; color:white; overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 10% 10%,rgba(0,255,136,.07) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 70% at 90% 90%,rgba(0,207,255,.07) 0%,transparent 60%);
+}
+.page{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 20px;}
+.card{background:rgba(255,255,255,.03);border:1px solid rgba(0,255,136,.2);border-radius:16px;padding:36px 32px;width:100%;max-width:500px;backdrop-filter:blur(12px);position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,255,136,.04) 0%,transparent 60%);pointer-events:none;}
+.brand{text-align:center;margin-bottom:28px;}
+.brand-name{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.brand-sub{font-size:10px;letter-spacing:.4em;color:rgba(255,255,255,.35);margin-top:4px;text-transform:uppercase;}
+#page-home .card{max-width:480px;text-align:center;border-color:rgba(0,207,255,.25);}
+.home-icon{font-size:52px;margin-bottom:12px;}
+.home-title{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--green);margin-bottom:8px;}
+.home-sub{font-size:13px;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:28px;}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.role-btn{padding:20px 14px;border-radius:12px;border:1px solid;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:.08em;transition:all .25s;text-align:center;background:rgba(255,255,255,.03);}
+.role-btn .role-icon{font-size:32px;display:block;margin-bottom:8px;}
+.role-btn-siswa{border-color:rgba(0,255,136,.35);color:var(--green);}
+.role-btn-siswa:hover{background:rgba(0,255,136,.1);transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,255,136,.2);}
+.role-btn-guru{border-color:rgba(255,215,0,.35);color:var(--yellow);}
+.role-btn-guru:hover{background:rgba(255,215,0,.1);transform:translateY(-3px);box-shadow:0 8px 30px rgba(255,215,0,.2);}
+.role-desc{font-size:11px;opacity:.6;font-weight:400;margin-top:4px;letter-spacing:.02em;}
+.field-group{margin-bottom:18px;}
+.field-label{font-size:11px;font-weight:700;letter-spacing:.25em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+input[type=text],input[type=password],textarea,select{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:white;font-family:'Rajdhani',sans-serif;font-size:14px;padding:12px 14px;outline:none;transition:border-color .3s,box-shadow .3s;}
+input[type=text]:focus,input[type=password]:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,255,136,.1);}
+textarea{resize:vertical;min-height:88px;line-height:1.6;}
+.char-count{font-size:10px;color:rgba(255,255,255,.3);margin-top:4px;text-align:right;}
+.section-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.3em;color:var(--green);border:1px solid rgba(0,255,136,.3);padding:4px 14px;border-radius:2px;margin-bottom:18px;text-transform:uppercase;}
+.btn-primary{width:100%;padding:14px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--green),var(--blue));color:#050008;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:transform .2s,box-shadow .2s;margin-top:8px;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,255,136,.3);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-secondary{background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;color:rgba(255,255,255,.5);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;padding:8px 16px;cursor:pointer;transition:all .2s;margin-top:8px;}
+.btn-secondary:hover{border-color:rgba(255,255,255,.35);color:white;}
+.btn-back{display:flex;align-items:center;gap:6px;background:none;border:none;color:rgba(255,255,255,.35);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:.15em;cursor:pointer;margin-bottom:20px;padding:0;transition:color .2s;}
+.btn-back:hover{color:rgba(255,255,255,.7);}
+.stars{display:flex;gap:8px;margin-bottom:6px;}
+.star-btn{background:none;border:none;font-size:28px;cursor:pointer;filter:grayscale(1) opacity(.4);transition:filter .2s,transform .2s;}
+.star-btn.active{filter:none;transform:scale(1.1);}
+.star-btn:hover{filter:none;transform:scale(1.15);}
+#rating-label{font-size:12px;color:var(--green);font-weight:600;min-height:18px;}
+.mood-row{display:flex;gap:8px;flex-wrap:wrap;}
+.mood-btn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:18px;transition:all .2s;display:flex;align-items:center;gap:5px;}
+.mood-btn span{font-size:11px;color:rgba(255,255,255,.5);font-family:'Rajdhani',sans-serif;}
+.mood-btn.active{border-color:var(--green);background:rgba(0,255,136,.08);transform:scale(1.05);}
+.prog-wrap{margin-bottom:20px;}
+.prog-meta{font-size:10px;letter-spacing:.2em;color:rgba(255,255,255,.3);text-transform:uppercase;display:flex;justify-content:space-between;margin-bottom:5px;}
+.prog-track{height:3px;background:rgba(255,255,255,.08);border-radius:2px;}
+.prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--green),var(--blue));transition:width .4s;width:0%;}
+.greeting{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:18px;padding:10px 14px;background:rgba(0,255,136,.05);border-left:3px solid var(--green);border-radius:0 6px 6px 0;}
+.greeting strong{color:var(--green);}
+.divider{border:none;border-top:1px solid rgba(255,255,255,.07);margin:18px 0;}
+#page-sukses{text-align:center;}
+.success-icon{font-size:64px;margin-bottom:16px;animation:bounce 1s ease infinite alternate;}
+@keyframes bounce{from{transform:translateY(0);}to{transform:translateY(-10px);}}
+.success-title{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;}
+.success-sub{color:rgba(255,255,255,.5);font-size:14px;line-height:1.7;margin-bottom:20px;}
+.success-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.3);border-radius:8px;padding:12px 20px;font-size:13px;font-weight:600;color:var(--green);}
+#page-gate-guru .card{border-color:rgba(255,215,0,.3);}
+.gate-icon{font-size:48px;text-align:center;margin-bottom:12px;}
+.gate-title{font-family:'Orbitron',monospace;font-size:18px;font-weight:900;color:var(--yellow);text-align:center;margin-bottom:8px;}
+.gate-sub{font-size:13px;color:rgba(255,255,255,.4);text-align:center;line-height:1.6;margin-bottom:24px;}
+.code-wrap{position:relative;margin-bottom:6px;}
+.code-wrap input{font-family:'Orbitron',monospace;font-size:16px;letter-spacing:.3em;padding:14px 44px 14px 18px;text-align:center;border-color:rgba(255,215,0,.3);}
+.code-wrap input:focus{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(255,215,0,.1);}
+.toggle-btn{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;}
+#gate-err{min-height:18px;font-size:12px;color:#ff6b6b;text-align:center;margin-bottom:8px;}
+.btn-enter{width:100%;padding:14px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--yellow),var(--orange));color:#050008;font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .2s;}
+.btn-enter:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,215,0,.3);}
+#page-dashboard-guru{justify-content:flex-start;align-items:stretch;padding:24px;max-width:1100px;margin:0 auto;width:100%;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.topbar-brand{font-family:'Orbitron',monospace;font-size:17px;font-weight:900;}
+.topbar-brand span{background:linear-gradient(135deg,var(--yellow),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.live-badge{display:flex;align-items:center;gap:7px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.3);border-radius:20px;padding:6px 14px;font-size:11px;font-weight:700;color:var(--green);letter-spacing:.1em;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.6);opacity:.6;}}
+.btn-logout{padding:7px 14px;border-radius:8px;border:1px solid rgba(255,107,107,.3);background:rgba(255,107,107,.07);color:#ff6b6b;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .2s;}
+.btn-logout:hover{background:rgba(255,107,107,.15);}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.stat-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;text-align:center;}
+.stat-num{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;line-height:1;}
+.stat-lbl{font-size:10px;letter-spacing:.2em;color:rgba(255,255,255,.35);margin-top:5px;text-transform:uppercase;}
+.stat-box:nth-child(1) .stat-num{color:var(--blue);}
+.stat-box:nth-child(2) .stat-num{color:var(--orange);}
+.stat-box:nth-child(3) .stat-num{color:var(--green);}
+.stat-box:nth-child(4) .stat-num{color:var(--yellow);}
+.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.toolbar input,.toolbar select{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:white;font-family:'Rajdhani',sans-serif;font-size:13px;padding:9px 12px;outline:none;}
+.toolbar input{flex:1;min-width:160px;}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--green);}
+.toolbar select option{background:#0a0f1a;}
+.export-btns{display:flex;gap:8px;}
+.btn-exp{padding:9px 14px;border-radius:8px;border:1px solid;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:.05em;cursor:pointer;transition:all .2s;}
+.btn-exp-xl{border-color:rgba(0,255,136,.4);color:var(--green);background:rgba(0,255,136,.07);}
+.btn-exp-xl:hover{background:rgba(0,255,136,.15);}
+.btn-exp-pdf{border-color:rgba(255,107,0,.4);color:var(--orange);background:rgba(255,107,0,.07);}
+.btn-exp-pdf:hover{background:rgba(255,107,0,.15);}
+.result-count{font-size:11px;color:rgba(255,255,255,.3);letter-spacing:.1em;}
+#cards-box{display:flex;flex-direction:column;gap:12px;}
+.d-card{background:rgba(255,255,255,.025);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,.07);transition:border-color .2s;}
+.d-card-pending{border-left:3px solid var(--orange);}
+.d-card-ok{border-left:3px solid var(--green);}
+.d-card-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;}
+.d-student{display:flex;align-items:center;gap:12px;}
+.d-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:16px;font-weight:900;color:#050008;flex-shrink:0;}
+.d-name{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;}
+.d-meta{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.1em;margin-top:3px;}
+.badge{font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 10px;border-radius:4px;border:1px solid;}
+.badge-ok{color:var(--green);border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.08);}
+.badge-pending{color:var(--orange);border-color:rgba(255,107,0,.3);background:rgba(255,107,0,.08);}
+.mood-tag{font-size:12px;color:rgba(255,255,255,.5);}
+.d-stars{font-size:16px;margin:10px 0 6px;letter-spacing:2px;}
+.d-rating-num{font-size:12px;color:rgba(255,255,255,.4);font-family:'Rajdhani',sans-serif;letter-spacing:.1em;}
+.btn-expand{background:none;border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.5);font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;padding:5px 12px;cursor:pointer;transition:all .2s;}
+.btn-expand:hover{border-color:var(--blue);color:var(--blue);}
+.qa-block{margin-bottom:12px;}
+.qa-lbl{font-size:10px;font-weight:700;letter-spacing:.25em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:5px;}
+.qa-txt{font-size:13px;line-height:1.65;color:rgba(255,255,255,.75);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid rgba(0,207,255,.3);}
+.existing-cmt .qa-txt{border-left-color:rgba(255,215,0,.4);background:rgba(255,215,0,.04);}
+.comment-area{margin-top:12px;}
+.comment-input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:white;font-family:'Rajdhani',sans-serif;font-size:13px;padding:10px 12px;outline:none;resize:vertical;min-height:70px;transition:border-color .3s;}
+.comment-input:focus{border-color:var(--yellow);}
+.btn-sm{padding:7px 14px;border-radius:6px;border:1px solid;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;cursor:pointer;transition:all .2s;}
+.btn-comment-save{color:var(--yellow);border-color:rgba(255,215,0,.3);background:rgba(255,215,0,.07);}
+.btn-comment-save:hover{background:rgba(255,215,0,.15);}
+.btn-mark{color:var(--green);border-color:rgba(0,255,136,.3);background:rgba(0,255,136,.07);}
+.btn-mark:hover{background:rgba(0,255,136,.15);}
+.btn-unmark{color:rgba(255,255,255,.4);border-color:rgba(255,255,255,.15);background:transparent;}
+.btn-unmark:hover{background:rgba(255,255,255,.06);}
+.btn-delete{color:#ff6b6b;border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.05);}
+.btn-delete:hover{background:rgba(255,107,107,.12);}
+.empty-state{text-align:center;padding:60px 20px;color:rgba(255,255,255,.3);font-size:14px;letter-spacing:.1em;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(10,15,26,.95);border:1px solid rgba(0,255,136,.3);border-radius:8px;padding:12px 22px;font-size:13px;font-weight:600;color:var(--green);transition:transform .3s;z-index:9999;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.err{border-color:rgba(255,107,107,.5);color:#ff6b6b;}
+.confetti-piece{position:fixed;top:-10px;pointer-events:none;animation:confetti-fall linear forwards;z-index:9999;}
+@keyframes confetti-fall{0%{transform:translateY(0) rotate(0);opacity:1;}100%{transform:translateY(105vh) rotate(720deg);opacity:0;}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:rgba(0,255,136,.3);border-radius:2px;}
+@media(max-width:600px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .export-btns{width:100%;}
+  .btn-exp{flex:1;text-align:center;}
+  .card{padding:24px 18px;}
+  #page-dashboard-guru{padding:16px;}
+}
+</style>
+</head>
+<body>
+<button class="back-button" onclick="location.href='landingpage.html'">
+    🏠 Kembali ke Beranda
+</button>
+<!-- PAGE 1: HOME -->
+<div class="page" id="page-home">
+  <div class="card">
+    <div class="brand">
+      <div class="brand-name">BioHalt</div>
+      <div class="brand-sub">Kinetics Protocol · Reflection</div>
+    </div>
+    <div class="home-icon">📝</div>
+    <div class="home-title">Halaman Refleksi</div>
+    <div class="home-sub">Rekam & pantau pemahaman siswa tentang Laju Reaksi secara real-time. Pilih peranmu untuk melanjutkan.</div>
+    <div class="role-grid">
+      <button class="role-btn role-btn-siswa" id="btn-siswa">
+        <span class="role-icon">🧑‍🎓</span>
+        SISWA
+        <div class="role-desc">Isi refleksi belajarmu</div>
+      </button>
+      <button class="role-btn role-btn-guru" id="btn-guru">
+        <span class="role-icon">👨‍🏫</span>
+        GURU
+        <div class="role-desc">Pantau & nilai siswa</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: LOGIN SISWA -->
+<div class="page" id="page-login-siswa">
+  <div class="card">
+    <button class="btn-back" id="back-home-1">← Kembali</button>
+    <div class="brand">
+      <div class="brand-name">BioHalt</div>
+      <div class="brand-sub">Reflection · Halaman Siswa</div>
+    </div>
+    <div style="text-align:center;margin-bottom:22px;">
+      <div class="section-badge">🧑‍🎓 Identitas Siswa</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.4);line-height:1.6;">Perkenalkan dirimu sebelum mengisi refleksi.</div>
+    </div>
+    <div class="field-group">
+      <div class="field-label">👤 Nama Lengkap</div>
+      <input type="text" id="inp-nama" placeholder="Contoh: Budi Santoso" autocomplete="off">
+    </div>
+    <div class="field-group">
+      <div class="field-label">🏫 Kelas</div>
+      <input type="text" id="inp-kelas" placeholder="Contoh: XI IPA 2">
+    </div>
+    <button class="btn-primary" id="btn-login-siswa">Mulai Refleksi →</button>
+  </div>
+</div>
+
+<!-- PAGE 3: FORM REFLEKSI -->
+<div class="page" id="page-form-siswa" style="justify-content:flex-start;padding-top:40px;padding-bottom:48px;">
+  <div class="card" style="max-width:560px;">
+    <div class="brand">
+      <div class="brand-name">Reflection</div>
+      <div class="brand-sub">Catatan Pemahaman · Laju Reaksi</div>
+    </div>
+    <div class="greeting">Hai, <strong id="greeting-name">—</strong>! Luangkan 3–5 menit untuk merefleksikan pemahamanmu hari ini. 🧪</div>
+    <div class="prog-wrap">
+      <div class="prog-meta"><span>Progress Pengisian</span><span id="prog-pct">0%</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+    <div class="field-group">
+      <div class="field-label">💡 Pertanyaan 1</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px;line-height:1.6;">Apa yang paling kamu pahami hari ini tentang <strong style="color:var(--green)">Laju Reaksi</strong>? Jelaskan dengan kata-katamu sendiri!</div>
+      <textarea id="q-learned" placeholder="Ceritakan pemahamanmu di sini..."></textarea>
+      <div class="char-count" id="q-learned-count">0 karakter</div>
+    </div>
+    <hr class="divider">
+    <div class="field-group">
+      <div class="field-label">🤔 Pertanyaan 2</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px;line-height:1.6;">Apa yang masih <strong style="color:#ffaa44">sulit atau membingungkan</strong> buatmu?</div>
+      <textarea id="q-difficult" placeholder="Bagian yang masih membingungkan..."></textarea>
+      <div class="char-count" id="q-difficult-count">0 karakter</div>
+    </div>
+    <hr class="divider">
+    <div class="field-group">
+      <div class="field-label">🌍 Pertanyaan 3</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px;line-height:1.6;">Sebutkan <strong style="color:var(--blue)">contoh nyata</strong> laju reaksi dalam kehidupan sehari-hari!</div>
+      <textarea id="q-apply" placeholder="Contoh di kehidupan sehari-hari..."></textarea>
+      <div class="char-count" id="q-apply-count">0 karakter</div>
+    </div>
+    <hr class="divider">
+    <div class="field-group">
+      <div class="field-label">⭐ Seberapa Paham Kamu?</div>
+      <div class="stars">
+        <button class="star-btn" data-val="1">⭐</button>
+        <button class="star-btn" data-val="2">⭐</button>
+        <button class="star-btn" data-val="3">⭐</button>
+        <button class="star-btn" data-val="4">⭐</button>
+        <button class="star-btn" data-val="5">⭐</button>
+      </div>
+      <div id="rating-label">—</div>
+    </div>
+    <hr class="divider">
+    <div class="field-group">
+      <div class="field-label">😊 Bagaimana Perasaanmu Hari Ini?</div>
+      <div class="mood-row">
+        <button class="mood-btn" data-val="Bingung">😕 <span>Bingung</span></button>
+        <button class="mood-btn" data-val="Biasa">😐 <span>Biasa</span></button>
+        <button class="mood-btn" data-val="Senang">😊 <span>Senang</span></button>
+        <button class="mood-btn" data-val="Semangat">🔥 <span>Semangat</span></button>
+        <button class="mood-btn" data-val="Bangga">🏆 <span>Bangga</span></button>
+      </div>
+    </div>
+    <button class="btn-primary" id="btn-submit-siswa">Kirim Refleksi 🚀</button>
+    <div style="text-align:center;margin-top:12px;font-size:10px;color:rgba(255,255,255,.2);letter-spacing:.1em;">Jawabanmu langsung masuk ke dashboard guru secara real-time</div>
+  </div>
+</div>
+
+<!-- PAGE 4: SUKSES -->
+<div class="page" id="page-sukses">
+  <div style="text-align:center;">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Refleksi Terkirim!</div>
+    <div class="success-sub">Terima kasih sudah meluangkan waktu.<br>Jawabanmu sudah masuk ke dashboard guru!</div>
+    <div class="success-badge">✅ Data berhasil dikirim ke Firebase</div>
+    <br><br>
+    <button class="btn-secondary" id="btn-kirim-lagi">← Kembali ke Beranda</button>
+  </div>
+</div>
+
+<!-- PAGE 5: GATE GURU -->
+<div class="page" id="page-gate-guru">
+  <div class="card">
+    <button class="btn-back" id="back-home-2">← Kembali</button>
+    <div class="gate-icon">🔐</div>
+    <div class="gate-title">AKSES GURU</div>
+    <div class="gate-sub">Halaman ini <strong>hanya untuk guru</strong>.<br>Masukkan kode akses khusus untuk melanjutkan.</div>
+    <div class="code-wrap">
+      <input type="password" id="inp-guru-code" placeholder="••••••••••" maxlength="20" autocomplete="off">
+      <button class="toggle-btn" id="toggle-code">👁</button>
+    </div>
+    <div id="gate-err"></div>
+    <button class="btn-enter" id="btn-masuk-guru">Masuk Dashboard →</button>
+    <div style="text-align:center;margin-top:16px;font-size:10px;color:rgba(255,255,255,.2);letter-spacing:.1em;">⚠ JANGAN BERIKAN KODE INI KEPADA SISWA</div>
+  </div>
+</div>
+
+<!-- PAGE 6: DASHBOARD GURU -->
+<div class="page" id="page-dashboard-guru" style="display:none;">
+  <div class="topbar">
+    <div>
+      <div class="topbar-brand">🧪 <span>Dashboard Guru</span></div>
+      <div style="font-size:11px;letter-spacing:.2em;color:rgba(255,255,255,.3);margin-top:2px;">BioHalt · Reflection Monitor · Real-time</div>
+    </div>
+    <div class="topbar-right">
+      <div class="live-badge"><span class="live-dot"></span> LIVE</div>
+      <button class="btn-logout" id="btn-logout-guru">⏏ Keluar</button>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Total Jawaban</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-pending">0</div><div class="stat-lbl">Belum Direview</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-reviewed">0</div><div class="stat-lbl">Sudah Direview</div></div>
+    <div class="stat-box"><div class="stat-num" id="stat-avg">–</div><div class="stat-lbl">Rata-rata Rating</div></div>
+  </div>
+  <div class="toolbar">
+    <input type="text" id="search-box" placeholder="🔍 Cari nama / kelas...">
+    <select id="filter-class"><option value="all">Semua Kelas</option></select>
+    <select id="filter-status">
+      <option value="all">Semua Status</option>
+      <option value="pending">Belum Direview</option>
+      <option value="reviewed">Sudah Direview</option>
+    </select>
+    <select id="sort-by">
+      <option value="newest">Terbaru</option>
+      <option value="oldest">Terlama</option>
+      <option value="name">Nama A–Z</option>
+      <option value="rating">Rating Tertinggi</option>
+    </select>
+    <span class="result-count" id="result-count">0 data</span>
+    <div class="export-btns">
+      <button class="btn-exp btn-exp-xl"  id="btn-export-excel">📊 Excel</button>
+      <button class="btn-exp btn-exp-pdf" id="btn-export-pdf">🖨 PDF</button>
+    </div>
+  </div>
+  <div id="cards-box">
+    <div class="empty-state">
+      <div style="font-size:48px;margin-bottom:12px">⏳</div>
+      <div>Menunggu koneksi Firebase...</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</body>
+</html>

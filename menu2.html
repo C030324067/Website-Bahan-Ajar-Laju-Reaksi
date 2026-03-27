@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Lab Kimia</title>
+<style>
+  :root {
+    --bg: #0a0a1a;
+    --surface: #12122a;
+    --card: #1a1a35;
+    --border: #2a2a55;
+    --accent1: #7c3aed;
+    --accent2: #ec4899;
+    --accent3: #06b6d4;
+    --accent4: #10b981;
+    --text: #f0f0ff;
+    --muted: #8888bb;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+  @keyframes floatR { 0%,100%{transform:translateY(0)} 50%{transform:translateY(20px)} }
+  @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 20px rgba(124,58,237,0.4)} 50%{box-shadow:0 0 50px rgba(124,58,237,0.8)} }
+
+  /* ── LANDING ── */
+  #page-home { animation: fadeIn 0.5s ease; }
+  .blob { position:fixed; border-radius:50%; pointer-events:none; z-index:0; }
+  .blob1 { top:-20%; left:-10%; width:500px; height:500px; background:radial-gradient(circle,rgba(124,58,237,0.15) 0%,transparent 70%); animation:float 8s ease-in-out infinite; }
+  .blob2 { bottom:-20%; right:-10%; width:600px; height:600px; background:radial-gradient(circle,rgba(236,72,153,0.12) 0%,transparent 70%); animation:floatR 10s ease-in-out infinite; }
+
+  .home-wrap { max-width:700px; margin:0 auto; padding:60px 24px; text-align:center; position:relative; z-index:1; animation:slideUp 0.8s ease-out; }
+  .badge { display:inline-block; background:rgba(124,58,237,0.2); border:1px solid var(--accent1); color:#a78bfa; padding:6px 16px; border-radius:99px; font-size:12px; margin-bottom:24px; letter-spacing:.1em; text-transform:uppercase; }
+  .home-title { font-size:clamp(2rem,6vw,3.5rem); font-weight:900; line-height:1.1; background:linear-gradient(135deg,#a78bfa,#ec4899,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:20px; }
+  .home-sub { font-size:16px; color:var(--muted); line-height:1.7; max-width:480px; margin:0 auto 40px; }
+  .feature-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:40px; }
+  .feature-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px 14px; text-align:left; transition:transform .2s,border-color .2s; cursor:default; }
+  .feature-card:hover { transform:translateY(-3px); border-color:var(--accent1); }
+  .feature-icon { font-size:24px; margin-bottom:6px; }
+  .feature-title { font-weight:700; font-size:13px; margin-bottom:4px; }
+  .feature-desc { font-size:11px; color:var(--muted); }
+  .btn-start { background:linear-gradient(135deg,#7c3aed,#ec4899); border:none; color:#fff; padding:16px 48px; border-radius:99px; font-size:16px; font-weight:800; cursor:pointer; box-shadow:0 0 40px rgba(124,58,237,0.5); transition:transform .2s,box-shadow .2s; letter-spacing:.03em; animation:pulse 2s ease-in-out infinite; }
+  .btn-start:hover { transform:scale(1.05); box-shadow:0 0 60px rgba(124,58,237,0.7); animation:none; }
+  .home-note { margin-top:16px; font-size:11px; color:var(--muted); }
+
+  /* ── LAB ── */
+  #page-lab { display:none; animation:fadeIn 0.4s ease; padding:16px; }
+  .lab-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+  .btn-back { background:rgba(255,255,255,0.06); border:1px solid var(--border); color:var(--text); padding:8px 16px; border-radius:99px; font-size:13px; cursor:pointer; transition:all .2s; }
+  .btn-back:hover { background:rgba(124,58,237,0.2); border-color:var(--accent1); }
+  .lab-title { font-size:clamp(1rem,3vw,1.4rem); font-weight:800; background:linear-gradient(135deg,#a78bfa,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .lab-sub { font-size:11px; color:var(--muted); }
+  .rate-badge { margin-left:auto; background:var(--card); border-radius:12px; padding:8px 16px; text-align:center; transition:border-color .3s,box-shadow .3s; border:1px solid transparent; }
+  .rate-val { font-size:22px; font-weight:900; font-family:monospace; }
+  .rate-lbl { font-size:10px; }
+
+  .lab-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; max-width:1100px; margin:0 auto; }
+  .panel { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:20px; }
+  .panel-title { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+
+  /* Sliders */
+  .slider-row { margin-bottom:14px; }
+  .slider-label { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:12px; color:var(--muted); }
+  .slider-val { font-size:13px; font-weight:700; font-family:monospace; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:6px; }
+  input[type=range] { width:100%; appearance:none; height:6px; border-radius:3px; outline:none; cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb { appearance:none; width:16px; height:16px; border-radius:50%; background:#fff; cursor:pointer; box-shadow:0 0 8px rgba(255,255,255,0.5); }
+
+  /* Catalyst toggle */
+  .catalyst-box { border-radius:14px; padding:14px 16px; cursor:pointer; transition:all .3s; border:1px solid var(--border); background:rgba(255,255,255,0.03); margin-top:8px; display:flex; justify-content:space-between; align-items:center; }
+  .catalyst-box:hover { border-color:var(--accent1); }
+  .toggle-track { width:44px; height:24px; border-radius:99px; background:rgba(255,255,255,0.1); display:flex; align-items:center; padding:0 3px; transition:all .3s; flex-shrink:0; }
+  .toggle-track.on { background:linear-gradient(135deg,#7c3aed,#ec4899); justify-content:flex-end; }
+  .toggle-thumb { width:18px; height:18px; border-radius:50%; background:#fff; }
+
+  .btn-run { width:100%; margin-top:14px; border:none; color:#fff; padding:12px; border-radius:14px; font-size:14px; font-weight:800; cursor:pointer; transition:all .3s; }
+  .btn-run.idle { background:linear-gradient(135deg,#7c3aed,#ec4899); box-shadow:0 0 20px rgba(124,58,237,0.4); }
+  .btn-run.running { background:linear-gradient(135deg,#ef4444,#f97316); box-shadow:0 0 20px rgba(239,68,68,0.4); }
+
+  /* Canvas */
+  #sim-canvas { border-radius:16px; border:1px solid var(--border); background:#08081a; width:100%; max-width:380px; display:block; }
+  .legend { display:flex; gap:12px; margin-top:12px; flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--muted); }
+  .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .insight-box { margin-top:12px; background:rgba(6,182,212,0.08); border:1px solid rgba(6,182,212,0.2); border-radius:12px; padding:10px 14px; font-size:11px; color:#67e8f9; line-height:1.6; }
+
+  /* Chart */
+  #chart-svg { width:100%; overflow:visible; }
+  .chart-placeholder { color:var(--muted); text-align:center; padding-top:40px; font-size:13px; }
+  .rec-status { font-size:11px; color:var(--muted); margin-bottom:12px; }
+  .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
+  .summary-item { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:8px 12px; }
+  .summary-lbl { font-size:10px; color:var(--muted); margin-bottom:2px; }
+  .summary-val { font-size:13px; font-weight:700; }
+  .btn-reset { margin-top:10px; width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--muted); padding:9px; border-radius:10px; font-size:12px; cursor:pointer; transition:all .2s; display:none; }
+  .btn-reset:hover { border-color:#ef4444; }
+
+  .lab-footer { text-align:center; margin-top:20px; font-size:11px; color:var(--muted); }
+</style>
+</head>
+<body>
+<!-- ══════════════ LANDING ══════════════ -->
+<div id="page-home">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="home-wrap">
+    <div class="badge">⚗️ Lab Kimia Digital</div>
+    <h1 class="home-title">Virtual Lab<br>Kimia Interaktif</h1>
+    <p class="home-sub">Eksplor laju reaksi kimia secara visual! Ubah variabel, amati tumbukan partikel, dan lihat grafik real-time — tanpa harus ke lab beneran. 🔬</p>
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-icon">🧪</div><div class="feature-title">4 Variabel</div><div class="feature-desc">Konsentrasi, Suhu, Luas Permukaan & Katalis</div></div>
+      <div class="feature-card"><div class="feature-icon">⚛️</div><div class="feature-title">Animasi Partikel</div><div class="feature-desc">Visualisasi tumbukan molekul real-time</div></div>
+      <div class="feature-card"><div class="feature-icon">📊</div><div class="feature-title">Grafik Dinamis</div><div class="feature-desc">Plot laju reaksi yang diperbarui otomatis</div></div>
+      <div class="feature-card"><div class="feature-icon">🎮</div><div class="feature-title">Interaktif</div><div class="feature-desc">Rancang eksperimenmu sendiri!</div></div>
+    </div>
+    <button class="btn-start" onclick="goLab()">🚀 Mulai Eksperimen</button>
+    <p class="home-note">Gratis • Tanpa daftar • Langsung main</p>
+  </div>
+</div>
+
+<!-- ══════════════ LAB ══════════════ -->
+<div id="page-lab">
+  <!-- Header -->
+  <div class="lab-header">
+    <button class="btn-back" onclick="goHome()">← Beranda</button>
+    <div>
+      <div class="lab-title">⚗️ Meja Lab Virtual</div>
+      <div class="lab-sub">Teori Tumbukan — Laju Reaksi</div>
+    </div>
+    <div class="rate-badge" id="rate-badge">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Laju Reaksi</div>
+      <div class="rate-val" id="rate-val">0.00</div>
+      <div class="rate-lbl" id="rate-lbl">—</div>
+    </div>
+  </div>
+
+  <!-- 3-column grid -->
+  <div class="lab-grid">
+
+    <!-- Panel 1: Controls -->
+    <div class="panel">
+      <div class="panel-title" style="color:#a78bfa;">🎛️ Panel Kontrol</div>
+
+      <div class="slider-row">
+        <div class="slider-label">
+          <span>💧 Konsentrasi</span>
+          <span class="slider-val" id="lbl-conc" style="color:#ef4444;">3 mol/L</span>
+        </div>
+        <input type="range" id="sl-conc" min="1" max="10" step="0.5" value="3"
+          style="background:linear-gradient(to right,#ef4444 22%,rgba(255,255,255,0.1) 22%)">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label">
+          <span>🌡️ Suhu</span>
+          <span class="slider-val" id="lbl-temp" style="color:#f97316;">25°C</span>
+        </div>
+        <input type="range" id="sl-temp" min="0" max="100" step="5" value="25"
+          style="background:linear-gradient(to right,#f97316 25%,rgba(255,255,255,0.1) 25%)">
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label">
+          <span>📐 Luas Permukaan</span>
+          <span class="slider-val" id="lbl-surf" style="color:#10b981;">2×</span>
+        </div>
+        <input type="range" id="sl-surf" min="1" max="5" step="0.5" value="2"
+          style="background:linear-gradient(to right,#10b981 25%,rgba(255,255,255,0.1) 25%)">
+      </div>
+
+      <!-- Catalyst -->
+      <div class="catalyst-box" id="cat-box" onclick="toggleCatalyst()">
+        <div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:2px;">⚡ Katalis</div>
+          <div style="font-size:11px;color:var(--muted);">Menurunkan energi aktivasi</div>
+        </div>
+        <div class="toggle-track" id="toggle-track">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+
+      <button class="btn-run idle" id="btn-run" onclick="toggleRun()">▶ Mulai Rekam Grafik</button>
+    </div>
+
+    <!-- Panel 2: Simulation -->
+    <div class="panel">
+      <div class="panel-title" style="color:#06b6d4;">⚛️ Simulasi Partikel</div>
+      <canvas id="sim-canvas" width="380" height="280"></canvas>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div>Molekul A</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#06b6d4;"></div>Molekul B</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#fcd34d;"></div>Tumbukan efektif</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div>Permukaan aktif</div>
+      </div>
+      <div class="insight-box">
+        💡 <strong>Teori Tumbukan:</strong> Reaksi terjadi saat partikel A & B bertumbukan dengan energi ≥ energi aktivasi. Suhu & konsentrasi tinggi = lebih banyak tumbukan efektif.
+      </div>
+    </div>
+
+    <!-- Panel 3: Chart -->
+    <div class="panel">
+      <div class="panel-title" style="color:#a78bfa;">📊 Grafik Laju Reaksi</div>
+      <div class="rec-status" id="rec-status">Tekan ▶ untuk mulai merekam</div>
+      <div id="chart-wrap" style="min-height:140px;">
+        <div class="chart-placeholder" id="chart-placeholder">Ubah variabel untuk melihat grafik ⚗️</div>
+        <svg id="chart-svg" viewBox="0 0 320 140" style="display:none;"></svg>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-item"><div class="summary-lbl">Konsentrasi</div><div class="summary-val" id="s-conc" style="color:#ef4444;">3 mol/L</div></div>
+        <div class="summary-item"><div class="summary-lbl">Suhu</div><div class="summary-val" id="s-temp" style="color:#f97316;">25°C</div></div>
+        <div class="summary-item"><div class="summary-lbl">Luas Permukaan</div><div class="summary-val" id="s-surf" style="color:#10b981;">2×</div></div>
+        <div class="summary-item"><div class="summary-lbl">Katalis</div><div class="summary-val" id="s-cat" style="color:var(--muted);">Tidak</div></div>
+      </div>
+
+      <button class="btn-reset" id="btn-reset" onclick="resetChart()">🗑️ Reset Grafik</button>
+    </div>
+  </div>
+<button class="back-button" onclick="location.href='landingpage.html'">
+    🏠 Kembali ke Beranda
+</button>
+  <div class="lab-footer">Virtual Lab Kimia • Teori Tumbukan & Laju Reaksi • SMA Kelas XI</div>
+</div>
+
+<script>
+// ── State ───────────────────────────────────────────────────────────────────
+let state = { conc:3, temp:25, surf:2, catalyst:false };
+let history = [];
+let running = false;
+let recInterval = null;
+let animId = null;
+let particles = [];
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+function goLab() {
+  document.getElementById('page-home').style.display = 'none';
+  document.getElementById('page-lab').style.display = 'block';
+  initParticles();
+  startSim();
+  updateUI();
+}
+function goHome() {
+  stopRec();
+  cancelAnimationFrame(animId);
+  document.getElementById('page-lab').style.display = 'none';
+  document.getElementById('page-home').style.display = 'block';
+}
+
+// ── Sliders ──────────────────────────────────────────────────────────────────
+function pct(val, min, max) { return ((val-min)/(max-min)*100).toFixed(1)+'%'; }
+
+document.getElementById('sl-conc').addEventListener('input', function() {
+  state.conc = +this.value;
+  this.style.background = `linear-gradient(to right,#ef4444 ${pct(state.conc,1,10)},rgba(255,255,255,0.1) ${pct(state.conc,1,10)})`;
+  document.getElementById('lbl-conc').textContent = state.conc+' mol/L';
+  document.getElementById('s-conc').textContent   = state.conc+' mol/L';
+  initParticles(); updateRate();
+});
+document.getElementById('sl-temp').addEventListener('input', function() {
+  state.temp = +this.value;
+  this.style.background = `linear-gradient(to right,#f97316 ${pct(state.temp,0,100)},rgba(255,255,255,0.1) ${pct(state.temp,0,100)})`;
+  document.getElementById('lbl-temp').textContent = state.temp+'°C';
+  document.getElementById('s-temp').textContent   = state.temp+'°C';
+  updateRate();
+});
+document.getElementById('sl-surf').addEventListener('input', function() {
+  state.surf = +this.value;
+  this.style.background = `linear-gradient(to right,#10b981 ${pct(state.surf,1,5)},rgba(255,255,255,0.1) ${pct(state.surf,1,5)})`;
+  document.getElementById('lbl-surf').textContent = state.surf+'×';
+  document.getElementById('s-surf').textContent   = state.surf+'×';
+  updateRate();
+});
+
+function toggleCatalyst() {
+  state.catalyst = !state.catalyst;
+  const track = document.getElementById('toggle-track');
+  const box   = document.getElementById('cat-box');
+  track.classList.toggle('on', state.catalyst);
+  box.style.background  = state.catalyst ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.03)';
+  box.style.borderColor = state.catalyst ? 'var(--accent1)' : 'var(--border)';
+  document.getElementById('s-cat').textContent  = state.catalyst ? 'Aktif ✓' : 'Tidak';
+  document.getElementById('s-cat').style.color  = state.catalyst ? '#a78bfa'  : 'var(--muted)';
+  initParticles(); updateRate();
+}
+
+// ── Rate calculation ──────────────────────────────────────────────────────────
+function calcRate() {
+  const base    = 0.2;
+  const cEffect = state.conc * 0.4;
+  const tEffect = Math.exp((state.temp-25)/30) - 0.5;
+  const sEffect = state.surf * 0.3;
+  const catE    = state.catalyst ? 1.8 : 0;
+  return Math.max(0, +(base + cEffect + tEffect + sEffect + catE).toFixed(2));
+}
+
+function updateRate() {
+  const r = calcRate();
+  const el = document.getElementById('rate-val');
+  const lb = document.getElementById('rate-lbl');
+  const badge = document.getElementById('rate-badge');
+  el.textContent = r.toFixed(2);
+  let col, label;
+  if (r < 1)      { col='#06b6d4'; label='Lambat'; }
+  else if (r < 3) { col='#fbbf24'; label='Sedang'; }
+  else            { col='#ef4444'; label='Cepat!'; }
+  el.style.color  = col;
+  lb.style.color  = col;
+  lb.textContent  = label;
+  badge.style.borderColor = col+'55';
+  badge.style.boxShadow   = `0 0 20px ${col}22`;
+}
+
+function updateUI() { updateRate(); }
+
+// ── Recording ────────────────────────────────────────────────────────────────
+function toggleRun() {
+  running = !running;
+  const btn = document.getElementById('btn-run');
+  if (running) {
+    history = [];
+    btn.textContent = '⏹ Stop Rekam';
+    btn.className   = 'btn-run running';
+    document.getElementById('rec-status').textContent = '🔴 Merekam...';
+    recInterval = setInterval(() => {
+      history.push({ rate: calcRate() });
+      if (history.length > 25) history.shift();
+      drawChart();
+    }, 600);
+  } else { stopRec(); }
+}
+function stopRec() {
+  running = false;
+  clearInterval(recInterval);
+  const btn = document.getElementById('btn-run');
+  btn.textContent = '▶ Mulai Rekam Grafik';
+  btn.className   = 'btn-run idle';
+  document.getElementById('rec-status').textContent = history.length > 0 ? '✅ Selesai direkam' : 'Tekan ▶ untuk mulai merekam';
+}
+function resetChart() {
+  history = []; stopRec();
+  document.getElementById('chart-svg').style.display = 'none';
+  document.getElementById('chart-placeholder').style.display = 'block';
+  document.getElementById('btn-reset').style.display = 'none';
+  document.getElementById('rec-status').textContent = 'Tekan ▶ untuk mulai merekam';
+}
+
+// ── Chart ────────────────────────────────────────────────────────────────────
+function drawChart() {
+  const svg  = document.getElementById('chart-svg');
+  const ph   = document.getElementById('chart-placeholder');
+  const rBtn = document.getElementById('btn-reset');
+  if (history.length < 2) return;
+  ph.style.display = 'none';
+  svg.style.display = 'block';
+  rBtn.style.display = 'block';
+
+  const W=320, H=140, pad=30;
+  const maxR = Math.max(...history.map(h=>h.rate), 0.1);
+  const pts  = history.map((h,i) => ({
+    x: pad + (i/(history.length-1))*(W-pad*2),
+    y: H - pad - (h.rate/maxR)*(H-pad*2)
+  }));
+  const lineD = pts.map((p,i)=>`${i===0?'M':'L'} ${p.x} ${p.y}`).join(' ');
+  const fillD = `${lineD} L ${pts[pts.length-1].x} ${H-pad} L ${pts[0].x} ${H-pad} Z`;
+  const last  = pts[pts.length-1];
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="cFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+      </linearGradient>
+      <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    ${[0,.25,.5,.75,1].map(t=>`<line x1="${pad}" y1="${H-pad-t*(H-pad*2)}" x2="${W-pad}" y2="${H-pad-t*(H-pad*2)}" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>`).join('')}
+    <line x1="${pad}" y1="${pad/2}" x2="${pad}" y2="${H-pad}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+    <line x1="${pad}" y1="${H-pad}" x2="${W-pad}" y2="${H-pad}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+    <path d="${fillD}" fill="url(#cFill)"/>
+    <path d="${lineD}" fill="none" stroke="#a78bfa" stroke-width="2.5" filter="url(#glow)" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${last.x}" cy="${last.y}" r="5" fill="#ec4899" filter="url(#glow)"/>
+    <text x="${pad-4}" y="${H-pad+12}" fill="#8888bb" font-size="9" text-anchor="middle">0</text>
+    <text x="${W-pad}" y="${H-pad+12}" fill="#8888bb" font-size="9" text-anchor="middle">${history.length}</text>
+    <text x="${pad-8}" y="${pad}" fill="#8888bb" font-size="9" text-anchor="middle">${maxR.toFixed(1)}</text>
+    <text x="${W/2}" y="${H-4}" fill="#8888bb" font-size="10" text-anchor="middle">Waktu (perubahan)</text>
+    <text x="12" y="${H/2}" fill="#8888bb" font-size="10" text-anchor="middle" transform="rotate(-90,12,${H/2})">Laju</text>
+  `;
+}
+
+// ── Particle simulation ───────────────────────────────────────────────────────
+const canvas = document.getElementById('sim-canvas');
+const ctx    = canvas.getContext('2d');
+const CW=380, CH=280;
+
+function initParticles() {
+  const count = Math.floor(20 + state.conc*3 + (state.catalyst?15:0));
+  const speed = 0.5 + state.temp*0.025;
+  particles = Array.from({length:count}, (_,i) => ({
+    id:i, x:Math.random()*CW, y:Math.random()*CH,
+    vx:(Math.random()-.5)*speed*2, vy:(Math.random()-.5)*speed*2,
+    r: i < count*.4 ? 7 : 5,
+    type: i < count*.4 ? 'A' : 'B',
+    colTimer:0
+  }));
+}
+
+function simStep() {
+  ctx.clearRect(0,0,CW,CH);
+
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=1;
+  for(let x=0;x<=CW;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,CH);ctx.stroke();}
+  for(let y=0;y<=CH;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();}
+
+  // surface lines
+  const lines = Math.floor(1+state.surf*2.5);
+  for(let i=0;i<lines;i++){
+    const yl=CH-18-i*18;
+    const g=ctx.createLinearGradient(0,yl,CW,yl);
+    g.addColorStop(0,'transparent');g.addColorStop(.5,'rgba(16,185,129,0.5)');g.addColorStop(1,'transparent');
+    ctx.strokeStyle=g; ctx.lineWidth=3; ctx.setLineDash([8,4]);
+    ctx.beginPath(); ctx.moveTo(0,yl); ctx.lineTo(CW,yl); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // catalyst glow
+  if(state.catalyst){
+    const cg=ctx.createRadialGradient(CW/2,CH/2,0,CW/2,CH/2,90);
+    cg.addColorStop(0,'rgba(124,58,237,0.15)');cg.addColorStop(1,'transparent');
+    ctx.fillStyle=cg; ctx.fillRect(0,0,CW,CH);
+  }
+
+  const maxSpd = 0.8 + state.temp*0.035;
+
+  // collision detection
+  for(let i=0;i<particles.length;i++){
+    const p=particles[i];
+    for(let j=i+1;j<particles.length;j++){
+      const q=particles[j];
+      const dx=q.x-p.x, dy=q.y-p.y;
+      const dist=Math.hypot(dx,dy);
+      if(dist<p.r+q.r+2 && p.type!==q.type){
+        p.colTimer=14; q.colTimer=14;
+        const nx=dx/dist, ny=dy/dist;
+        const rv=(p.vx-q.vx)*nx+(p.vy-q.vy)*ny;
+        p.vx-=rv*nx; p.vy-=rv*ny;
+        q.vx+=rv*nx; q.vy+=rv*ny;
+      }
+    }
+  }
+
+  // draw
+  particles.forEach(p=>{
+    p.vx+=(Math.random()-.5)*.05;
+    p.vy+=(Math.random()-.5)*.05;
+    const spd=Math.hypot(p.vx,p.vy);
+    if(spd>maxSpd){p.vx=p.vx/spd*maxSpd;p.vy=p.vy/spd*maxSpd;}
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<p.r||p.x>CW-p.r){p.vx*=-1;p.x=Math.max(p.r,Math.min(CW-p.r,p.x));}
+    if(p.y<p.r||p.y>CH-p.r){p.vy*=-1;p.y=Math.max(p.r,Math.min(CH-p.r,p.y));}
+    if(p.colTimer>0) p.colTimer--;
+
+    // trail glow
+    const hit=p.colTimer>0;
+    const baseCol = p.type==='A' ? (hit?'rgba(252,211,77,':'rgba(239,68,68,') : (hit?'rgba(252,211,77,':'rgba(6,182,212,');
+    const tg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*2.5);
+    tg.addColorStop(0,baseCol+'0.25)'); tg.addColorStop(1,'transparent');
+    ctx.fillStyle=tg; ctx.beginPath(); ctx.arc(p.x,p.y,p.r*2.5,0,Math.PI*2); ctx.fill();
+
+    // flash on collision
+    if(p.colTimer===14){
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r*3.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(252,211,77,0.35)'; ctx.fill();
+    }
+
+    // particle body
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    if (hit) {
+      ctx.fillStyle = '#fcd34d';
+    } else if (p.type === 'A') {
+      ctx.fillStyle = '#ef4444';
+    } else {
+      ctx.fillStyle = '#06b6d4';
+    }
+    ctx.fill();
+    ctx.strokeStyle = hit?'#fff':'rgba(255,255,255,0.3)'; ctx.lineWidth=1.5; ctx.stroke();
+
+    // label
+    ctx.fillStyle='#fff'; ctx.font=`bold ${p.r-1}px monospace`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(p.type,p.x,p.y);
+  });
+
+  animId = requestAnimationFrame(simStep);
+}
+
+function startSim() { cancelAnimationFrame(animId); simStep(); }
+</script>
+</body>
+</html>

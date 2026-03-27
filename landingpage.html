@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BioHalt: Kinetics Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --acid-green: #21dd85;
+    --plasma-blue: #00cfff;
+    --hazard-orange: #ff6b00;
+    --deep-purple: #0a0014;
+    --void-black: #1a0f57;
+    --rust-red: #c0392b;
+    --glow-yellow: #ffd700;
+    --panel-bg: rgba(0,255,136,0.04);
+    --border-glow: rgba(0,255,136,0.25);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--void-black);
+    font-family: 'Rajdhani', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+    cursor: default;
+  }
+
+  .bg-canvas {
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(0,255,136,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 80%, rgba(0,207,255,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 60% 20%, rgba(255,107,0,0.05) 0%, transparent 50%),
+      var(--void-black);
+  }
+
+  .particles { position:fixed; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+  .particle {
+    position:absolute;
+    border-radius:50%;
+    animation: float-up linear infinite;
+    opacity:0;
+  }
+  @keyframes float-up {
+    0%   { opacity:0; transform:translateY(0) scale(0.5); }
+    10%  { opacity:1; }
+    90%  { opacity:0.6; }
+    100% { opacity:0; transform:translateY(-100vh) scale(1.2); }
+  }
+
+  .scanlines {
+    position:fixed; inset:0; z-index:2; pointer-events:none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,255,136,0.012) 2px,
+      rgba(0,255,136,0.012) 4px
+    );
+  }
+
+  .wrapper {
+    position:relative; z-index:10;
+    display:flex; flex-direction:column; align-items:center;
+    min-height:100vh;
+    padding: 32px 24px 48px;
+  }
+
+  .header {
+    text-align:center;
+    margin-bottom: 16px;
+    animation: fade-down 0.8s ease both;
+  }
+  @keyframes fade-down {
+    from { opacity:0; transform:translateY(-30px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .lab-badge {
+    display:inline-block;
+    font-family:'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight:700;
+    letter-spacing: 0.35em;
+    color: var(--acid-green);
+    border: 1px solid rgba(6, 104, 58, 0.4);
+    padding: 5px 18px;
+    border-radius: 2px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    position:relative;
+    overflow:hidden;
+  }
+  .lab-badge::after {
+    content:'';
+    position:absolute; inset:0;
+    background: linear-gradient(90deg, transparent, rgba(0,255,136,0.15), transparent);
+    animation: shimmer 2.5s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0%,100% { transform:translateX(-100%); }
+    50% { transform:translateX(100%); }
+  }
+
+  .logo-main {
+    font-family:'Orbitron', monospace;
+    font-size: clamp(40px, 8vw, 72px);
+    font-weight:900;
+    line-height:1;
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--acid-green) 0%, var(--plasma-blue) 50%, var(--acid-green) 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    filter: drop-shadow(0 0 30px rgba(0,255,136,0.5));
+    background-size: 200%;
+    animation: logo-shift 4s ease-in-out infinite;
+  }
+  @keyframes logo-shift {
+    0%,100% { background-position:0% 50%; }
+    50%     { background-position:100% 50%; }
+  }
+
+  .logo-sub {
+    font-family:'Orbitron', monospace;
+    font-size: clamp(11px, 2vw, 15px);
+    font-weight:400;
+    letter-spacing: 0.6em;
+    color: var(--plasma-blue);
+    opacity:0.8;
+    margin-top:6px;
+    text-transform:uppercase;
+  }
+
+  .topic-tag {
+    display:inline-block;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.2em;
+    color: rgba(255,255,255,0.5);
+    margin-top:10px;
+  }
+  .topic-tag span { color: var(--glow-yellow); }
+
+  .showcase {
+    width: 100%;
+    max-width: 860px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0 30px;
+    animation: fade-up 0.9s 0.3s ease both;
+  }
+  @keyframes fade-up {
+    from { opacity:0; transform:translateY(30px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .reaction-card {
+    position:relative;
+    border: 1px solid var(--border-glow);
+    border-radius:8px;
+    padding: 18px 20px 22px;
+    background: var(--panel-bg);
+    overflow:hidden;
+    backdrop-filter: blur(8px);
+  }
+  .reaction-card::before {
+    content:'';
+    position:absolute; inset:0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+    pointer-events:none;
+  }
+
+  .rc-label {
+    font-family:'Rajdhani', sans-serif;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:0.35em;
+    text-transform:uppercase;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .rc-label .dot {
+    width:6px; height:6px; border-radius:50%;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%,100%{transform:scale(1);opacity:1;}
+    50%{transform:scale(1.5);opacity:0.6;}
+  }
+
+  .rc-title {
+    font-family:'Orbitron', monospace;
+    font-size: clamp(14px, 2.5vw, 18px);
+    font-weight:700;
+    margin-bottom: 8px;
+  }
+
+  .rc-rate {
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.1em;
+    opacity:0.7;
+    margin-bottom:14px;
+  }
+
+  .rust-card { border-color: rgba(192,57,43,0.4); }
+  .rust-card .dot { background: var(--rust-red); box-shadow:0 0 8px var(--rust-red); }
+  .rust-card .rc-title { color: #e87a6a; }
+  .rust-card .rc-label { color: var(--rust-red); }
+
+  .rust-scene {
+    display:flex; align-items:flex-end; gap:10px;
+    height:80px; position:relative;
+  }
+  .iron-bar {
+    width:60px; height:50px;
+    border-radius:4px;
+    background: linear-gradient(135deg, #8a8a8a, #5a5a5a);
+    position:relative;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .rust-overlay {
+    position:absolute; inset:0;
+    background: linear-gradient(135deg, rgba(165,42,42,0.9), rgba(139,69,19,0.7));
+    border-radius:4px;
+    animation: rust-spread 4s ease-in-out infinite alternate;
+    transform-origin: bottom left;
+  }
+  @keyframes rust-spread {
+    0%  { clip-path: polygon(0 100%, 20% 100%, 10% 60%, 0 70%); opacity:0.5; }
+    50% { clip-path: polygon(0 100%, 60% 100%, 50% 40%, 20% 60%, 0 50%); opacity:0.85; }
+    100%{ clip-path: polygon(0 100%, 100% 100%, 100% 20%, 60% 30%, 20% 50%, 0 40%); opacity:1; }
+  }
+  .rust-particles { position:absolute; top:0; right:0; width:100%; height:100%; pointer-events:none; }
+  .rust-dot {
+    position:absolute;
+    width:4px; height:4px; border-radius:50%;
+    background: var(--rust-red);
+    animation: rust-dot-anim var(--d) var(--del) ease-in-out infinite;
+  }
+  @keyframes rust-dot-anim {
+    0%,100%{opacity:0;transform:scale(0);}
+    50%{opacity:1;transform:scale(1);}
+  }
+
+  .rust-stats { font-size:11px; color:rgba(255,255,255,0.5); line-height:1.8; }
+  .rust-stats b { color:#e87a6a; }
+
+  .time-bar { margin-top:12px; }
+  .time-label { font-size:10px; letter-spacing:0.15em; color:rgba(255,255,255,0.4); margin-bottom:4px; }
+  .time-track {
+    height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden;
+  }
+  .time-fill {
+    height:100%; border-radius:2px;
+    animation: fill-rust 4s ease-in-out infinite alternate;
+  }
+  @keyframes fill-rust {
+    0%{width:5%;} 100%{width:92%;}
+  }
+
+  .fire-card { border-color: rgba(255,107,0,0.4); }
+  .fire-card .dot { background: var(--hazard-orange); box-shadow:0 0 8px var(--hazard-orange); }
+  .fire-card .rc-title { color: #ffaa44; }
+  .fire-card .rc-label { color: var(--hazard-orange); }
+
+  .firework-scene {
+    position:relative; height:80px; display:flex; align-items:flex-end;
+    justify-content:center; overflow:hidden;
+  }
+  .fw-stick {
+    width:3px; height:40px;
+    background: linear-gradient(#888, #555);
+    border-radius:2px;
+    position:relative; z-index:2;
+  }
+  .fw-burst {
+    position:absolute; top:8px; left:50%;
+    width:60px; height:60px;
+    transform:translateX(-50%);
+    pointer-events:none;
+  }
+  .spark {
+    position:absolute; top:50%; left:50%;
+    width:2px; height:14px;
+    background: linear-gradient(var(--c), transparent);
+    transform-origin: 0 0;
+    transform: rotate(var(--r)) translateY(-50%);
+    border-radius:1px;
+    animation: spark-burst 1.2s var(--del) ease-out infinite;
+  }
+  @keyframes spark-burst {
+    0%  { height:0; opacity:0; transform:rotate(var(--r)) translateY(-50%) scaleY(0); }
+    20% { height:18px; opacity:1; transform:rotate(var(--r)) translateY(-50%) scaleY(1); }
+    100%{ height:24px; opacity:0; transform:rotate(var(--r)) translateY(-200%) scaleY(0.5); }
+  }
+
+  .glow-center {
+    position:absolute; top:50%; left:50%;
+    width:14px; height:14px; border-radius:50%;
+    background: white;
+    transform:translate(-50%,-50%);
+    box-shadow: 0 0 20px 8px rgba(255,200,0,0.8);
+    animation: core-pulse 1.2s ease-out infinite;
+  }
+  @keyframes core-pulse {
+    0%{transform:translate(-50%,-50%) scale(0);opacity:0;}
+    20%{transform:translate(-50%,-50%) scale(1.2);opacity:1;}
+    100%{transform:translate(-50%,-50%) scale(0.3);opacity:0;}
+  }
+
+  .fw-stats { font-size:11px; color:rgba(255,255,255,0.5); line-height:1.8; margin-top:10px; }
+  .fw-stats b { color:#ffaa44; }
+  .time-fill.fast { animation: fill-fast 1.2s ease-out infinite; }
+  @keyframes fill-fast { 0%{width:0%;} 100%{width:100%;} }
+
+  .menu-grid {
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    width:100%;
+    max-width: 860px;
+    animation: fade-up 1s 0.5s ease both;
+  }
+
+  .menu-btn {
+    position:relative;
+    border-radius:10px;
+    padding: 24px 22px;
+    cursor:pointer;
+    overflow:hidden;
+    border: 1px solid transparent;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align:left;
+    background: rgba(88, 88, 240, 0.03);
+    backdrop-filter:blur(10px);
+    text-decoration:none;
+    display:block;
+    color:rgb(235, 224, 224);
+  }
+  .menu-btn:hover { transform:translateY(-4px) scale(1.01); }
+  .menu-btn::before {
+    content:'';
+    position:absolute; inset:0; border-radius:10px;
+    background: var(--btn-grad);
+    opacity:0.08;
+    transition: opacity 0.3s;
+  }
+  .menu-btn:hover::before { opacity:0.15; }
+
+  .btn-materi  {
+    --btn-grad: linear-gradient(135deg, #00ff88, #00cfff);
+    border-color: rgba(0,255,136,0.3);
+    box-shadow: 0 4px 30px rgba(0,255,136,0.08);
+  }
+  .btn-materi:hover { box-shadow: 0 8px 40px rgba(0,255,136,0.2); border-color:rgba(0,255,136,0.6); }
+
+  .btn-lab {
+    --btn-grad: linear-gradient(135deg, #00cfff, #7b2fff);
+    border-color: rgba(0,207,255,0.3);
+    box-shadow: 0 4px 30px rgba(0,207,255,0.08);
+  }
+  .btn-lab:hover { box-shadow: 0 8px 40px rgba(0,207,255,0.2); border-color:rgba(0,207,255,0.6); }
+
+  .btn-game {
+    --btn-grad: linear-gradient(135deg, #ff6b00, #ff0055);
+    border-color: rgba(255,107,0,0.3);
+    box-shadow: 0 4px 30px rgba(255,107,0,0.08);
+  }
+  .btn-game:hover { box-shadow: 0 8px 40px rgba(255,107,0,0.25); border-color:rgba(255,107,0,0.6); }
+
+  .btn-reflection {
+    --btn-grad: linear-gradient(135deg, #ffd700, #ff8c00);
+    border-color: rgba(255,215,0,0.3);
+    box-shadow: 0 4px 30px rgba(255,215,0,0.08);
+  }
+  .btn-reflection:hover { box-shadow: 0 8px 40px rgba(255,215,0,0.2); border-color:rgba(255,215,0,0.6); }
+
+  .btn-icon {
+    font-size: 32px;
+    margin-bottom:12px;
+    display:block;
+    animation: icon-float 3s ease-in-out infinite;
+  }
+  @keyframes icon-float {
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-4px);}
+  }
+
+  .btn-num {
+    position:absolute; top:16px; right:18px;
+    font-family:'Orbitron', monospace;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:0.2em;
+    opacity:0.3;
+    color:white;
+  }
+
+  .btn-tag {
+    display:inline-block;
+    font-size:9px;
+    font-weight:700;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    padding:3px 9px;
+    border-radius:2px;
+    margin-bottom:10px;
+    border:1px solid;
+  }
+  .btn-materi  .btn-tag { color:var(--acid-green);  border-color:rgba(0,255,136,0.4);  background:rgba(0,255,136,0.07); }
+  .btn-lab     .btn-tag { color:var(--plasma-blue); border-color:rgba(0,207,255,0.4);  background:rgba(0,207,255,0.07); }
+  .btn-game    .btn-tag { color:var(--hazard-orange);border-color:rgba(255,107,0,0.4); background:rgba(255,107,0,0.07); }
+  .btn-reflection .btn-tag { color:var(--glow-yellow); border-color:rgba(255,215,0,0.4); background:rgba(255,215,0,0.07); }
+
+  .btn-title {
+    font-family:'Orbitron', monospace;
+    font-size: clamp(14px, 2.2vw, 18px);
+    font-weight:700;
+    margin-bottom:6px;
+    line-height:1.2;
+  }
+  .btn-materi  .btn-title { color:#aaffd4; }
+  .btn-lab     .btn-title { color:#a0eeff; }
+  .btn-game    .btn-title { color:#ffcc88; }
+  .btn-reflection .btn-title { color:#ffee99; }
+
+  .btn-subtitle {
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:0.1em;
+    opacity:0.5;
+    margin-bottom:12px;
+    text-transform:uppercase;
+    color:white;
+  }
+
+  .btn-desc {
+    font-size:13px;
+    font-weight:400;
+    line-height:1.65;
+    color:rgba(255,255,255,0.6);
+    margin-bottom:16px;
+  }
+
+  .btn-features {
+    display:flex; flex-wrap:wrap; gap:6px;
+  }
+  .feature-chip {
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:0.05em;
+    padding:3px 9px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.06);
+    color:rgba(255,255,255,0.5);
+    border:1px solid rgba(255,255,255,0.08);
+  }
+
+  .btn-arrow {
+    position:absolute; bottom:18px; right:18px;
+    font-size:18px;
+    opacity:0.3;
+    transition: opacity 0.3s, transform 0.3s;
+    color:white;
+  }
+  .menu-btn:hover .btn-arrow { opacity:0.8; transform:translateX(4px); }
+
+  .corner-tl, .corner-br {
+    position:absolute;
+    width:16px; height:16px;
+    pointer-events:none;
+  }
+  .corner-tl { top:8px; left:8px; border-top:1.5px solid; border-left:1.5px solid; }
+  .corner-br { bottom:8px; right:8px; border-bottom:1.5px solid; border-right:1.5px solid; }
+  .btn-materi  .corner-tl, .btn-materi  .corner-br { border-color:rgba(0,255,136,0.4); }
+  .btn-lab     .corner-tl, .btn-lab     .corner-br { border-color:rgba(0,207,255,0.4); }
+  .btn-game    .corner-tl, .btn-game    .corner-br { border-color:rgba(255,107,0,0.4); }
+  .btn-reflection .corner-tl, .btn-reflection .corner-br { border-color:rgba(255,215,0,0.4); }
+
+  .footer {
+    margin-top:28px;
+    text-align:center;
+    animation: fade-up 1s 0.7s ease both;
+  }
+  .footer-text {
+    font-size:11px; letter-spacing:0.2em;
+    color:rgba(255,255,255,0.2);
+    text-transform:uppercase;
+  }
+  .footer-text span { color:var(--acid-green); opacity:0.6; }
+
+  .status-bar {
+    display:flex; align-items:center; justify-content:center;
+    gap:20px;
+    margin-top:12px;
+  }
+  .status-item {
+    display:flex; align-items:center; gap:6px;
+    font-size:10px; letter-spacing:0.15em;
+    color:rgba(255,255,255,0.25);
+  }
+  .status-dot {
+    width:5px; height:5px; border-radius:50%;
+    background:var(--acid-green);
+    box-shadow:0 0 6px var(--acid-green);
+    animation:pulse-dot 2s ease-in-out infinite;
+  }
+
+  @media(max-width:600px){
+    .showcase, .menu-grid { grid-template-columns:1fr; }
+    .btn-desc { font-size:12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-canvas"></div>
+<div class="particles" id="particles"></div>
+<div class="scanlines"></div>
+
+<div class="wrapper">
+
+  <header class="header">
+    <div class="lab-badge">⚗ Virtual Chemistry Laboratory</div>
+    <h1 class="logo-main">BioHalt</h1>
+    <div class="logo-sub">Kinetics Protocol</div>
+    <div class="topic-tag">Bab: <span>Laju Reaksi Kimia</span></div>
+  </header>
+
+  <div class="showcase">
+
+    <!-- Rust Card -->
+    <div class="reaction-card rust-card">
+      <div class="rc-label"><span class="dot"></span> REAKSI LAMBAT</div>
+      <div class="rc-title">Perkaratan Besi</div>
+      <div class="rc-rate">v ≈ 0.003 mm/hari</div>
+      <div class="rust-scene">
+        <div class="iron-bar">
+          <div class="rust-overlay"></div>
+          <div class="rust-particles">
+            <div class="rust-dot" style="--d:2.1s;--del:0.1s;top:20%;left:30%;"></div>
+            <div class="rust-dot" style="--d:2.8s;--del:0.6s;top:50%;left:70%;"></div>
+            <div class="rust-dot" style="--d:1.9s;--del:1.1s;top:70%;left:45%;"></div>
+            <div class="rust-dot" style="--d:2.4s;--del:0.3s;top:35%;left:55%;"></div>
+          </div>
+        </div>
+        <div class="rust-stats">
+          4Fe + 3O₂ + 6H₂O<br>
+          → <b>4Fe(OH)₃</b><br>
+          <span style="color:rgba(255,255,255,0.35)">Berhari-hari · Berminggu-minggu</span>
+        </div>
+      </div>
+      <div class="time-bar">
+        <div class="time-label">PROGRESS OKSIDASI</div>
+        <div class="time-track">
+          <div class="time-fill" style="background:linear-gradient(90deg,#c0392b,#e74c3c);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firework Card -->
+    <div class="reaction-card fire-card">
+      <div class="rc-label"><span class="dot"></span> REAKSI CEPAT</div>
+      <div class="rc-title">Kembang Api</div>
+      <div class="rc-rate">v ≈ 10⁶ mol/L·s</div>
+      <div class="firework-scene">
+        <div class="fw-burst">
+          <div class="glow-center"></div>
+          <div class="spark" style="--r:0deg;   --c:#ff4400;--del:0s;"></div>
+          <div class="spark" style="--r:30deg;  --c:#ffaa00;--del:0.05s;"></div>
+          <div class="spark" style="--r:60deg;  --c:#ffffff;--del:0.1s;"></div>
+          <div class="spark" style="--r:90deg;  --c:#ff4400;--del:0.05s;"></div>
+          <div class="spark" style="--r:120deg; --c:#ffaa00;--del:0s;"></div>
+          <div class="spark" style="--r:150deg; --c:#ff6600;--del:0.1s;"></div>
+          <div class="spark" style="--r:180deg; --c:#ffffff;--del:0.05s;"></div>
+          <div class="spark" style="--r:210deg; --c:#ff4400;--del:0s;"></div>
+          <div class="spark" style="--r:240deg; --c:#ffaa00;--del:0.1s;"></div>
+          <div class="spark" style="--r:270deg; --c:#ff6600;--del:0.05s;"></div>
+          <div class="spark" style="--r:300deg; --c:#ffffff;--del:0s;"></div>
+          <div class="spark" style="--r:330deg; --c:#ff4400;--del:0.1s;"></div>
+        </div>
+        <div class="fw-stick"></div>
+      </div>
+      <div class="fw-stats">
+        KNO₃ + C + S → <b>N₂ + CO₂ + K₂S</b><br>
+        <span style="color:rgba(255,255,255,0.35)">Milidetik · Instan</span>
+      </div>
+      <div class="time-bar" style="margin-top:8px;">
+        <div class="time-label">LAJU REAKSI</div>
+        <div class="time-track">
+          <div class="time-fill fast" style="background:linear-gradient(90deg,#ff6b00,#ffd700);"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENU GRID -->
+  <!-- Ganti href="#" dengan path halaman kamu masing-masing -->
+  <nav class="menu-grid">
+
+    <a href="menu1.html" class="menu-btn btn-materi">
+      <div class="corner-tl"></div>
+      <div class="corner-br"></div>
+      <span class="btn-num">01</span>
+      <span class="btn-icon">📚</span>
+      <div class="btn-tag">Modul Belajar</div>
+      <div class="btn-title">Materi</div>
+      <div class="btn-subtitle">Konsep Laju Reaksi</div>
+      <p class="btn-desc">Pelajari teori laju reaksi secara interaktif — mulai dari faktor-faktor yang mempengaruhi, persamaan laju, orde reaksi, hingga teori tumbukan.</p>
+      <div class="btn-features">
+        <span class="feature-chip">📖 Teori Dasar</span>
+        <span class="feature-chip">🔬 Faktor Laju</span>
+        <span class="feature-chip">📐 Persamaan Laju</span>
+        <span class="feature-chip">⚛ Teori Tumbukan</span>
+      </div>
+      <span class="btn-arrow">→</span>
+    </a>
+
+    <a href="menu2.html" class="menu-btn btn-lab">
+      <div class="corner-tl"></div>
+      <div class="corner-br"></div>
+      <span class="btn-num">02</span>
+      <span class="btn-icon">🧪</span>
+      <div class="btn-tag">Eksperimen</div>
+      <div class="btn-title">Virtual Lab</div>
+      <div class="btn-subtitle">Eksperimen Bebas</div>
+      <p class="btn-desc">Rancang eksperimenmu sendiri di laboratorium virtual. Ubah suhu, konsentrasi, katalis, dan luas permukaan, lalu amati hasilnya secara real-time.</p>
+      <div class="btn-features">
+        <span class="feature-chip">🌡 Variabel Suhu</span>
+        <span class="feature-chip">⚗ Konsentrasi</span>
+        <span class="feature-chip">📊 Grafik Live</span>
+        <span class="feature-chip">💾 Catat Data</span>
+      </div>
+      <span class="btn-arrow">→</span>
+    </a>
+
+    <a href="menu3.html" class="menu-btn btn-game">
+      <div class="corner-tl"></div>
+      <div class="corner-br"></div>
+      <span class="btn-num">03</span>
+      <span class="btn-icon">🧟</span>
+      <div class="btn-tag">Mini Game</div>
+      <div class="btn-title">Game</div>
+      <div class="btn-subtitle">Zombie Cure: Racing Against Time</div>
+      <p class="btn-desc">Wabah zombie menyebar! Temukan formula antidot dengan memilih reaksi kimia yang tepat sebelum waktu habis. Semakin cepat laju reaksimu, semakin banyak yang terselamatkan!</p>
+      <div class="btn-features">
+        <span class="feature-chip">⏱ Time Challenge</span>
+        <span class="feature-chip">🏆 Leaderboard</span>
+        <span class="feature-chip">🎯 Misi Bertingkat</span>
+        <span class="feature-chip">💊 Antidot Quest</span>
+      </div>
+      <span class="btn-arrow">→</span>
+    </a>
+
+     <a href="menu4.html" class="menu-btn btn-reflection">
+      <div class="corner-tl"></div>
+      <div class="corner-br"></div>
+      <span class="btn-num">04</span>
+      <span class="btn-icon">📝</span>
+      <div class="btn-tag">Catatan Pribadi</div>
+      <div class="btn-title">Reflection</div>
+      <div class="btn-subtitle">Catatan Pemahaman</div>
+      <p class="btn-desc">Refleksikan pemahamanmu setelah belajar dan bereksperimen. Tulis insight, pertanyaan, dan kesimpulan — rekam perjalanan belajarmu dalam satu jurnal digital.</p>
+      <div class="btn-features">
+        <span class="feature-chip">✍ Jurnal Digital</span>
+        <span class="feature-chip">💡 Insight Saya</span>
+        <span class="feature-chip">❓ Pertanyaan</span>
+        <span class="feature-chip">📈 Progress</span>
+      </div>
+      <span class="btn-arrow">→</span>
+    </a>
+
+  <footer class="footer">
+    <div class="status-bar">
+      <div class="status-item"><span class="status-dot"></span> SISTEM AKTIF</div>
+      <div class="status-item">|</div>
+      <div class="status-item">SMA · KIMIA · KLS XI</div>
+      <div class="status-item">|</div>
+      <div class="status-item">v2.4.1</div>
+    </div>
+    <div class="footer-text" style="margin-top:10px;">
+      <span>BioHalt</span> Kinetics Protocol · Virtual Lab Kimia · © 2025
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  // Floating particles
+  const container = document.getElementById('particles');
+  const colors = ['rgba(0,255,136,', 'rgba(0,207,255,', 'rgba(255,107,0,', 'rgba(255,215,0,'];
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 4 + 1;
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const opacity = (Math.random() * 0.4 + 0.1).toFixed(2);
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      bottom:-10px;
+      background: ${color}${opacity};
+      animation-duration:${Math.random()*12+8}s;
+      animation-delay:${Math.random()*10}s;
+      box-shadow:0 0 ${size*2}px ${color}0.5;
+    `;
+    container.appendChild(p);
+  }
+</script>
+</body>
+</html>

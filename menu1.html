@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BioHalt — Materi Laju Reaksi</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f3ff;
+  --dark: #0f0a1e;
+  --card: #ffffff;
+  --c1: #6d28d9;   /* violet */
+  --c2: #db2777;   /* pink */
+  --c3: #0891b2;   /* cyan */
+  --c4: #059669;   /* emerald */
+  --c5: #d97706;   /* amber */
+  --c6: #dc2626;   /* red */
+  --text: #1e1b4b;
+  --muted: #6b6b99;
+  --border: #e2e0f0;
+  --ff-head: 'Syne', sans-serif;
+  --ff-body: 'Plus Jakarta Sans', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--ff-body);overflow-x:hidden;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:#e8e4ff;}
+::-webkit-scrollbar-thumb{background:var(--c1);border-radius:99px;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes popIn{0%{transform:scale(0.7);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes bubbleIn{from{transform:scale(0) rotate(-15deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+@keyframes slideRight{from{width:0}to{width:100%}}
+@keyframes wiggle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── NAVBAR ── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(245,243,255,0.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;
+  display:flex;align-items:center;gap:16px;height:60px;
+}
+.nav-logo{font-family:var(--ff-head);font-size:22px;font-weight:900;
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-badge{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;
+  font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;letter-spacing:.08em;text-transform:uppercase;}
+.nav-links{margin-left:auto;display:flex;gap:6px;}
+.nav-link{padding:6px 14px;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;
+  border:1.5px solid transparent;transition:all .2s;color:var(--muted);text-decoration:none;}
+.nav-link:hover,.nav-link.active{background:linear-gradient(135deg,var(--c1),var(--c2));
+  color:#fff;border-color:transparent;}
+
+/* ── HERO ── */
+.hero{
+  min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 24px;text-align:center;position:relative;overflow:hidden;
+}
+.hero-noise{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity:.4;
+}
+.hero-blob{position:absolute;border-radius:50%;pointer-events:none;}
+.hb1{width:600px;height:600px;top:-200px;left:-200px;
+  background:radial-gradient(circle,rgba(109,40,217,.12),transparent 70%);animation:float 9s ease-in-out infinite;}
+.hb2{width:500px;height:500px;bottom:-150px;right:-100px;
+  background:radial-gradient(circle,rgba(219,39,119,.1),transparent 70%);animation:float 11s ease-in-out infinite reverse;}
+.hb3{width:300px;height:300px;top:40%;left:60%;
+  background:radial-gradient(circle,rgba(8,145,178,.1),transparent 70%);animation:float 7s ease-in-out infinite 2s;}
+
+.hero-tag{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(109,40,217,.1);border:1.5px solid rgba(109,40,217,.25);
+  color:var(--c1);padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;
+  margin-bottom:28px;animation:fadeUp .6s ease both;}
+.hero-title{font-family:var(--ff-head);font-size:clamp(2.4rem,7vw,5rem);font-weight:900;
+  line-height:1.0;margin-bottom:20px;animation:fadeUp .6s ease .1s both;}
+.hero-title span{
+  background:linear-gradient(135deg,var(--c1),var(--c2),var(--c3));
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:shimmer 4s linear infinite;}
+.hero-sub{font-size:17px;color:var(--muted);max-width:560px;line-height:1.7;
+  margin-bottom:40px;animation:fadeUp .6s ease .2s both;}
+.hero-cards{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+  animation:fadeUp .6s ease .3s both;}
+.hero-card{background:#fff;border:2px solid var(--border);border-radius:16px;
+  padding:14px 20px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .25s;box-shadow:0 4px 16px rgba(0,0,0,.06);}
+.hero-card:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.12);}
+.hero-card .dot{width:10px;height:10px;border-radius:50%;}
+.scroll-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  font-size:11px;color:var(--muted);animation:bounce 2s ease infinite;}
+.scroll-arrow{font-size:20px;}
+
+/* ── SECTION WRAPPER ── */
+.section{padding:80px 24px;max-width:960px;margin:0 auto;}
+.section-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  padding:5px 14px;border-radius:99px;margin-bottom:14px;}
+.section-title{font-family:var(--ff-head);font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;
+  line-height:1.1;margin-bottom:16px;}
+.section-sub{font-size:15px;color:var(--muted);line-height:1.7;max-width:620px;margin-bottom:48px;}
+
+/* ── REVEAL ON SCROLL ── */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity .6s ease,transform .6s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+/* ══════════════════════════════════
+   SECTION 1 — APA ITU LAJU REAKSI
+══════════════════════════════════ */
+.intro-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+@media(max-width:640px){.intro-grid{grid-template-columns:1fr;}}
+
+.def-card{background:#fff;border-radius:24px;padding:32px;
+  box-shadow:0 8px 32px rgba(109,40,217,.1);border:2px solid rgba(109,40,217,.15);
+  position:relative;overflow:hidden;}
+.def-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(to right,var(--c1),var(--c2));}
+.def-big{font-family:var(--ff-head);font-size:3rem;font-weight:900;
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  line-height:1;margin-bottom:12px;}
+.def-text{font-size:15px;line-height:1.8;color:var(--text);}
+.def-formula{margin-top:20px;background:linear-gradient(135deg,rgba(109,40,217,.08),rgba(219,39,119,.08));
+  border-radius:16px;padding:18px;text-align:center;}
+.formula-main{font-size:1.3rem;font-weight:800;font-family:monospace;
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.formula-note{font-size:11px;color:var(--muted);margin-top:6px;}
+
+/* Analogy cards */
+.analogy-stack{display:flex;flex-direction:column;gap:14px;}
+.analogy-card{border-radius:18px;padding:18px 20px;cursor:pointer;
+  transition:transform .2s,box-shadow .2s;border:2px solid transparent;}
+.analogy-card:hover{transform:translateX(6px);}
+.analogy-card .emoji{font-size:28px;margin-bottom:8px;display:block;animation:bounce 2s ease infinite;}
+.analogy-card .a-title{font-weight:700;font-size:14px;margin-bottom:4px;}
+.analogy-card .a-text{font-size:13px;opacity:.8;line-height:1.6;}
+
+/* Satuan strip */
+.unit-strip{margin-top:40px;background:#fff;border-radius:20px;padding:24px 28px;
+  display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+  box-shadow:0 4px 20px rgba(0,0,0,.06);border:2px solid var(--border);}
+.unit-badge{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;
+  font-size:1.4rem;font-weight:900;font-family:monospace;padding:12px 20px;border-radius:14px;}
+.unit-info{font-size:13px;color:var(--muted);line-height:1.6;}
+.unit-info strong{color:var(--text);}
+
+/* ══════════════════════════════════
+   SECTION 2 — FAKTOR-FAKTOR
+══════════════════════════════════ */
+/* Tab navigation */
+.tabs-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
+.tab-btn{padding:10px 20px;border-radius:12px;font-size:13px;font-weight:700;
+  cursor:pointer;border:2px solid var(--border);background:#fff;color:var(--muted);
+  transition:all .25s;display:flex;align-items:center;gap:7px;}
+.tab-btn.active,.tab-btn:hover{color:#fff;border-color:transparent;transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(0,0,0,.15);}
+.tab-btn.t1.active,.tab-btn.t1:hover{background:linear-gradient(135deg,#6d28d9,#8b5cf6);}
+.tab-btn.t2.active,.tab-btn.t2:hover{background:linear-gradient(135deg,#dc2626,#f97316);}
+.tab-btn.t3.active,.tab-btn.t3:hover{background:linear-gradient(135deg,#059669,#06b6d4);}
+.tab-btn.t4.active,.tab-btn.t4:hover{background:linear-gradient(135deg,#d97706,#ec4899);}
+
+.tab-panel{display:none;animation:fadeUp .4s ease both;}
+.tab-panel.active{display:block;}
+
+/* Factor card layout */
+.factor-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+@media(max-width:640px){.factor-layout{grid-template-columns:1fr;}}
+
+.factor-content{background:#fff;border-radius:22px;padding:28px;
+  box-shadow:0 6px 24px rgba(0,0,0,.07);}
+.factor-title{font-family:var(--ff-head);font-size:1.6rem;font-weight:900;margin-bottom:14px;}
+.factor-body{font-size:14px;line-height:1.8;color:var(--text);}
+.factor-rule{margin-top:20px;border-radius:14px;padding:16px 18px;font-size:13px;font-weight:600;}
+
+/* Visual demos */
+.factor-visual{border-radius:22px;overflow:hidden;border:2px solid var(--border);}
+.vis-canvas{width:100%;height:220px;display:block;background:#0f0a1e;border-radius:20px;}
+
+/* Key points chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.chip{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:600;border:1.5px solid transparent;}
+
+/* Real-life examples */
+.reallife{margin-top:20px;display:flex;flex-direction:column;gap:10px;}
+.rl-item{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;
+  border-radius:14px;background:rgba(0,0,0,.02);border:1.5px solid var(--border);
+  font-size:13px;transition:all .2s;cursor:default;}
+.rl-item:hover{background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateX(4px);}
+.rl-icon{font-size:22px;flex-shrink:0;}
+.rl-text strong{display:block;font-weight:700;font-size:12px;margin-bottom:2px;}
+
+/* ── ANIMATED VIS CARDS ── */
+.vis-card{border-radius:22px;padding:24px;min-height:220px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;position:relative;overflow:hidden;}
+
+/* Concentration vis */
+.conc-vis{background:linear-gradient(135deg,#1e0a42,#2d1b69);}
+.conc-dots{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:100%;}
+.conc-dot{border-radius:50%;transition:all .4s;animation:popIn .3s ease both;}
+
+/* Temp vis */
+.temp-vis{background:linear-gradient(135deg,#1a0a00,#3b1002);}
+.thermo-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;}
+.thermo-bar-bg{width:28px;height:120px;background:rgba(255,255,255,.1);border-radius:14px;
+  position:relative;overflow:hidden;}
+.thermo-bar{position:absolute;bottom:0;left:0;right:0;border-radius:14px;
+  transition:height .8s cubic-bezier(.34,1.56,.64,1);}
+.temp-particles{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;}
+.temp-particle{border-radius:50%;animation:float 1s ease-in-out infinite;}
+
+/* Surface vis */
+.surf-vis{background:linear-gradient(135deg,#0a1a0a,#0a2a1a);}
+.surf-blocks{display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;}
+.surf-row{display:flex;gap:4px;}
+.surf-block{border-radius:4px;transition:all .5s;}
+
+/* Catalyst vis */
+.cat-vis{background:linear-gradient(135deg,#1a0a1a,#2a0a3a);}
+.energy-diagram{width:100%;height:130px;position:relative;}
+
+/* ══════════════════════════════════
+   SECTION 3 — KEHIDUPAN SEHARI-HARI
+══════════════════════════════════ */
+.daily-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;}
+.daily-card{border-radius:22px;overflow:hidden;cursor:pointer;
+  transition:transform .25s,box-shadow .25s;position:relative;}
+.daily-card:hover{transform:translateY(-6px);box-shadow:0 16px 48px rgba(0,0,0,.16);}
+.daily-thumb{height:160px;display:flex;align-items:center;justify-content:center;
+  font-size:64px;position:relative;overflow:hidden;}
+.daily-thumb::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,.5));}
+.play-btn{position:absolute;bottom:14px;right:14px;z-index:2;
+  background:rgba(255,255,255,.2);backdrop-filter:blur(8px);
+  border:1.5px solid rgba(255,255,255,.4);border-radius:99px;
+  padding:6px 14px;font-size:11px;font-weight:700;color:#fff;}
+.daily-body{padding:18px 20px;background:#fff;}
+.daily-title{font-weight:800;font-size:15px;margin-bottom:6px;}
+.daily-desc{font-size:13px;color:var(--muted);line-height:1.6;}
+.daily-tag{display:inline-block;margin-top:10px;font-size:11px;font-weight:700;
+  padding:4px 10px;border-radius:99px;}
+
+/* ══════════════════════════════════
+   SECTION 4 — PERHITUNGAN
+══════════════════════════════════ */
+.calc-accordion{display:flex;flex-direction:column;gap:12px;}
+.acc-item{border-radius:18px;overflow:hidden;border:2px solid var(--border);
+  background:#fff;transition:box-shadow .3s;}
+.acc-item.open{box-shadow:0 8px 32px rgba(0,0,0,.1);}
+.acc-header{display:flex;align-items:center;gap:14px;padding:20px 22px;cursor:pointer;
+  user-select:none;transition:background .2s;}
+.acc-header:hover{background:rgba(0,0,0,.02);}
+.acc-num{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--ff-head);font-size:1rem;font-weight:900;color:#fff;flex-shrink:0;}
+.acc-title{font-weight:800;font-size:15px;flex:1;}
+.acc-arrow{font-size:18px;transition:transform .3s;color:var(--muted);}
+.acc-item.open .acc-arrow{transform:rotate(180deg);}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);}
+.acc-body-inner{padding:0 22px 22px;}
+
+/* Formula display */
+.formula-box{background:linear-gradient(135deg,#f5f3ff,#fdf2f8);
+  border-radius:16px;padding:20px;margin-bottom:16px;text-align:center;
+  border:1.5px solid rgba(109,40,217,.15);}
+.f-main{font-size:1.2rem;font-family:monospace;font-weight:800;
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.f-where{margin-top:10px;font-size:12px;color:var(--muted);}
+.f-where table{width:100%;border-collapse:collapse;}
+.f-where td{padding:4px 8px;text-align:left;}
+.f-where td:first-child{font-weight:700;font-family:monospace;color:var(--c1);width:60px;}
+
+/* Worked example */
+.worked{background:#f9f9ff;border-radius:14px;padding:18px 20px;margin-top:14px;
+  border-left:4px solid var(--c1);}
+.worked-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--c1);margin-bottom:10px;}
+.worked-step{display:flex;gap:10px;margin-bottom:8px;font-size:13px;line-height:1.7;}
+.step-num{width:22px;height:22px;border-radius:6px;background:var(--c1);color:#fff;
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.answer-box{background:linear-gradient(135deg,rgba(109,40,217,.1),rgba(219,39,119,.1));
+  border-radius:10px;padding:12px 16px;margin-top:10px;font-weight:700;font-size:14px;text-align:center;
+  background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;}
+
+/* ══════════════════════════════════
+   QUICK QUIZ
+══════════════════════════════════ */
+.quiz-wrap{background:linear-gradient(135deg,var(--c1),var(--c2));
+  border-radius:28px;padding:40px;text-align:center;color:#fff;position:relative;overflow:hidden;}
+.quiz-wrap::before{content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='rgba(255,255,255,0.04)' d='M46.5,-58.6C59.8,-48.6,70,-33.8,73.4,-17.5C76.7,-1.2,73.2,16.7,64.6,30.8C56,44.9,42.2,55.3,27,61.4C11.9,67.5,-4.7,69.4,-20.9,65.5C-37.2,61.5,-53.2,51.7,-62,37.6C-70.8,23.4,-72.4,4.8,-68.6,-12.1C-64.8,-29,-55.5,-44.1,-43,-54.3C-30.4,-64.5,-14.5,-69.8,1.6,-71.7C17.8,-73.6,33.2,-68.5,46.5,-58.6Z' transform='translate(100 100)'/%3E%3C/svg%3E") no-repeat center/cover;}
+.quiz-q{font-family:var(--ff-head);font-size:1.3rem;font-weight:900;margin-bottom:24px;}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:500px;margin:0 auto 20px;}
+.quiz-opt{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);
+  color:#fff;padding:12px 16px;border-radius:14px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s;text-align:left;}
+.quiz-opt:hover{background:rgba(255,255,255,.25);}
+.quiz-opt.correct{background:#10b981;border-color:#10b981;}
+.quiz-opt.wrong{background:#ef4444;border-color:#ef4444;}
+.quiz-feedback{min-height:36px;font-size:15px;font-weight:700;}
+.quiz-next{margin-top:14px;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.5);
+  color:#fff;padding:10px 24px;border-radius:99px;font-size:13px;font-weight:700;cursor:pointer;
+  display:none;transition:all .2s;}
+.quiz-next:hover{background:rgba(255,255,255,.35);}
+
+/* ── PROGRESS BAR ── */
+.progress-bar{position:fixed;top:0;left:0;height:3px;
+  background:linear-gradient(to right,var(--c1),var(--c2),var(--c3));
+  transition:width .1s;z-index:999;}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:40px 24px;font-size:13px;color:var(--muted);
+  border-top:1px solid var(--border);}
+
+/* ── MOBILE FIXES ── */
+@media(max-width:480px){
+  .tabs-nav{gap:6px;}
+  .tab-btn{padding:8px 12px;font-size:12px;}
+  .quiz-opts{grid-template-columns:1fr;}
+  .hero-cards{flex-direction:column;align-items:center;}
+}
+</style>
+</head>
+<body>
+<button class="back-button" onclick="location.href='landingpage.html'">
+    🏠 Kembali ke Beranda
+</button>
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">BioHalt</div>
+  <div class="nav-badge">✨ Kimia SMA</div>
+  <div class="nav-links">
+    <a class="nav-link active" href="#">📖 Materi</a>
+    <a class="nav-link" href="#">🧪 Lab</a>
+    <a class="nav-link" href="#">🎮 Kuis</a>
+    <a class="nav-link" href="#">📊 Nilai</a>
+  </div>
+</nav>
+
+<!-- ══════════ HERO ══════════ -->
+<section class="hero">
+  <div class="hero-noise"></div>
+  <div class="hero-blob hb1"></div>
+  <div class="hero-blob hb2"></div>
+  <div class="hero-blob hb3"></div>
+
+  <div class="hero-tag">⚗️ Bab 1 · Kimia Kelas XI</div>
+  <h1 class="hero-title">Laju <span>Reaksi</span><br>Kimia</h1>
+  <p class="hero-sub">Kenapa kembang api meledak cepat tapi batu berkarat lama banget? Semua jawabannya ada di sini — dengan cara yang nggak bikin ngantuk!</p>
+
+  <div class="hero-cards">
+    <div class="hero-card" onclick="scrollTo('#apa')">
+      <div class="dot" style="background:#6d28d9;"></div>Pengertian
+    </div>
+    <div class="hero-card" onclick="scrollTo('#faktor')">
+      <div class="dot" style="background:#dc2626;"></div>4 Faktor
+    </div>
+    <div class="hero-card" onclick="scrollTo('#daily')">
+      <div class="dot" style="background:#0891b2;"></div>Kehidupan Nyata
+    </div>
+    <div class="hero-card" onclick="scrollTo('#hitung')">
+      <div class="dot" style="background:#d97706;"></div>Perhitungan
+    </div>
+    <div class="hero-card" onclick="scrollTo('#quiz')">
+      <div class="dot" style="background:#db2777;"></div>Mini Kuis
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <span>Scroll ke bawah</span>
+    <span class="scroll-arrow">↓</span>
+  </div>
+</section>
+
+<!-- ══════════ SECTION 1: APA ITU LAJU REAKSI ══════════ -->
+<section class="section reveal" id="apa">
+  <div class="section-tag" style="background:rgba(109,40,217,.1);color:var(--c1);">📌 Bagian 1</div>
+  <h2 class="section-title">Apa itu Laju Reaksi?</h2>
+  <p class="section-sub">Laju reaksi = seberapa cepat suatu reaksi kimia terjadi. Gampangnya, ini ngukur perubahan konsentrasi per satuan waktu.</p>
+
+  <div class="intro-grid">
+    <div class="def-card reveal">
+      <div class="def-big">v</div>
+      <p class="def-text">
+        <strong>Laju reaksi (v)</strong> adalah perubahan konsentrasi reaktan atau produk tiap satuan waktu.
+        Makin besar nilainya, makin <em>ngebut</em> reaksinya! 🚀
+      </p>
+      <div class="def-formula">
+        <div class="formula-main">v = Δ[X] / Δt</div>
+        <div class="formula-note">mol/L per detik (M/s) atau mol L⁻¹ s⁻¹</div>
+      </div>
+    </div>
+
+    <div class="analogy-stack reveal">
+      <div class="analogy-card" style="background:#f5f3ff;border-color:rgba(109,40,217,.2);">
+        <span class="emoji">🚗</span>
+        <div class="a-title" style="color:var(--c1);">Seperti Kecepatan Mobil</div>
+        <div class="a-text" style="color:#5b21b6;">Laju reaksi = kecepatan perubahan. Mobil diukur km/jam, reaksi diukur mol/L·s</div>
+      </div>
+      <div class="analogy-card" style="background:#fff0f6;border-color:rgba(219,39,119,.2);">
+        <span class="emoji">🍦</span>
+        <div class="a-title" style="color:var(--c2);">Es Krim Meleleh</div>
+        <div class="a-text" style="color:#9d174d;">Makin panas hari = makin cepat meleleh = laju perubahan makin tinggi!</div>
+      </div>
+      <div class="analogy-card" style="background:#ecfeff;border-color:rgba(8,145,178,.2);">
+        <span class="emoji">🧯</span>
+        <div class="a-title" style="color:var(--c3);">Api & Oksigen</div>
+        <div class="a-text" style="color:#0e7490;">Lebih banyak oksigen = api makin besar = reaksi pembakaran makin cepat</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="unit-strip reveal">
+    <div class="unit-badge">M/s</div>
+    <div class="unit-info">
+      <strong>Satuan laju reaksi</strong> paling umum adalah <strong>mol/L·s (M/s)</strong>.<br>
+      Kadang juga pakai <strong>M/menit</strong>, <strong>M/jam</strong> tergantung kecepatan reaksinya.
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SECTION 2: FAKTOR ══════════ -->
+<section class="section reveal" id="faktor">
+  <div class="section-tag" style="background:rgba(220,38,38,.1);color:var(--c6);">🔬 Bagian 2</div>
+  <h2 class="section-title">4 Faktor yang Mempengaruhi<br>Laju Reaksi</h2>
+  <p class="section-sub">Pilih salah satu faktor untuk eksplorasi lebih dalam. Tiap faktor punya visualisasi interaktifnya sendiri!</p>
+
+  <div class="tabs-nav">
+    <button class="tab-btn t1 active" onclick="switchTab(0)">💧 Konsentrasi</button>
+    <button class="tab-btn t2" onclick="switchTab(1)">🌡️ Suhu</button>
+    <button class="tab-btn t3" onclick="switchTab(2)">📐 Luas Permukaan</button>
+    <button class="tab-btn t4" onclick="switchTab(3)">⚡ Katalis</button>
+  </div>
+
+  <!-- TAB 0: KONSENTRASI -->
+  <div class="tab-panel active" id="tab0">
+    <div class="factor-layout">
+      <div class="factor-content">
+        <div class="factor-title" style="background:linear-gradient(135deg,var(--c1),#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          💧 Konsentrasi
+        </div>
+        <div class="factor-body">
+          Konsentrasi = jumlah partikel zat dalam 1 liter larutan.
+          <br><br>
+          Makin tinggi konsentrasi → partikel makin padat → peluang bertumbukan makin sering → reaksi makin cepat!
+        </div>
+        <div class="factor-rule" style="background:rgba(109,40,217,.08);color:#5b21b6;border:1.5px solid rgba(109,40,217,.2);">
+          📏 <strong>Hukumnya:</strong> Laju reaksi berbanding lurus dengan konsentrasi reaktan (sesuai orde reaksi).
+        </div>
+        <div class="chips">
+          <span class="chip" style="background:#f5f3ff;color:var(--c1);border-color:rgba(109,40,217,.2);">↑ konsentrasi</span>
+          <span class="chip" style="background:#f5f3ff;color:var(--c1);border-color:rgba(109,40,217,.2);">↑ tumbukan</span>
+          <span class="chip" style="background:#f5f3ff;color:var(--c1);border-color:rgba(109,40,217,.2);">↑ laju reaksi</span>
+        </div>
+        <div class="reallife">
+          <div class="rl-item">
+            <div class="rl-icon">💊</div>
+            <div class="rl-text"><strong>Tablet Effervescent</strong>Larut lebih cepat di air panas vs dingin karena partikel lebih aktif</div>
+          </div>
+          <div class="rl-item">
+            <div class="rl-icon">🫁</div>
+            <div class="rl-text"><strong>O₂ di Rumah Sakit</strong>Oksigen murni 100% mempercepat metabolisme sel dibanding udara biasa (21%)</div>
+          </div>
+          <div class="rl-item">
+            <div class="rl-icon">🍋</div>
+            <div class="rl-text"><strong>Jeruk & Besi</strong>Asam pekat melarutkan besi jauh lebih cepat daripada asam encer</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="vis-card conc-vis" id="concVis">
+          <div style="font-size:12px;color:rgba(255,255,255,.5);font-weight:600;align-self:flex-start;">Geser untuk ubah konsentrasi:</div>
+          <input type="range" id="concSlider" min="1" max="5" value="3" style="width:100%;accent-color:#8b5cf6;">
+          <div class="conc-dots" id="concDots"></div>
+          <div style="font-size:12px;color:rgba(255,255,255,.6);">Partikel di larutan: <strong id="concCount" style="color:#c4b5fd;">—</strong></div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:center;">🟣 Mol A &nbsp;🔵 Mol B &nbsp;💥 Tumbukan aktif</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 1: SUHU -->
+  <div class="tab-panel" id="tab1">
+    <div class="factor-layout">
+      <div class="factor-content">
+        <div class="factor-title" style="background:linear-gradient(135deg,#dc2626,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          🌡️ Suhu
+        </div>
+        <div class="factor-body">
+          Suhu yang lebih tinggi memberi energi kinetik lebih besar ke partikel.
+          <br><br>
+          Partikel bergerak lebih cepat → lebih sering bertumbukan → lebih banyak yang punya energi ≥ Eₐ → reaksi makin cepat!
+        </div>
+        <div class="factor-rule" style="background:rgba(220,38,38,.08);color:#991b1b;border:1.5px solid rgba(220,38,38,.2);">
+          🔥 <strong>Aturan Van't Hoff:</strong> Setiap kenaikan suhu 10°C, laju reaksi naik ≈ 2× lipat!
+        </div>
+        <div class="chips">
+          <span class="chip" style="background:#fff5f5;color:#dc2626;border-color:rgba(220,38,38,.2);">↑ suhu</span>
+          <span class="chip" style="background:#fff5f5;color:#dc2626;border-color:rgba(220,38,38,.2);">↑ energi kinetik</span>
+          <span class="chip" style="background:#fff5f5;color:#dc2626;border-color:rgba(220,38,38,.2);">↑ laju reaksi</span>
+        </div>
+        <div class="reallife">
+          <div class="rl-item">
+            <div class="rl-icon">🍕</div>
+            <div class="rl-text"><strong>Oven & Microwave</strong>Masak di 200°C jauh lebih cepat daripada 100°C karena reaksi kimia dipercepat</div>
+          </div>
+          <div class="rl-item">
+            <div class="rl-icon">❄️</div>
+            <div class="rl-text"><strong>Kulkas</strong>Suhu rendah memperlambat bakteri & reaksi pembusukan → makanan lebih awet</div>
+          </div>
+          <div class="rl-item">
+            <div class="rl-icon">💊</div>
+            <div class="rl-text"><strong>Obat di Kulkas</strong>Banyak obat disimpan dingin agar reaksi kimia di dalamnya tidak cepat rusak</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="vis-card temp-vis" id="tempVis">
+          <div style="font-size:12px;color:rgba(255,255,255,.5);font-weight:600;align-self:flex-start;">Ubah suhu:</div>
+          <input type="range" id="tempSlider" min="0" max="100" value="50" style="width:100%;accent-color:#ef4444;">
+          <div style="display:flex;gap:30px;align-items:flex-end;justify-content:center;">
+            <div class="thermo-wrap">
+              <div style="font-size:11px;color:rgba(255,255,255,.5);">Suhu</div>
+              <div class="thermo-bar-bg">
+                <div class="thermo-bar" id="thermoBar" style="height:50%;background:linear-gradient(to top,#ef4444,#f97316);"></div>
+              </div>
+              <div style="font-size:14px;font-weight:800;color:#fca5a5;" id="tempLabel">50°C</div>
+            </div>
+            <div class="temp-particles" id="tempParticles" style="max-width:120px;"></div>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);">🔴 Partikel aktif &nbsp;⚡ Tumbukan efektif</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: LUAS PERMUKAAN -->
+  <div class="tab-panel" id="tab2">
+    <div class="factor-layout">
+      <div class="factor-content">
+        <div class="factor-title" style="background:linear-gradient(135deg,#059669,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          📐 Luas Permukaan
+        </div>
+        <div class="factor-body">
+          Reaksi kimia terjadi di <strong>permukaan</strong> zat padat yang bersentuhan dengan reaktan lain.
+          <br><br>
+          Serbuk halus punya luas permukaan jauh lebih besar daripada bongkahan besar → lebih banyak area kontak → reaksi makin cepat!
+        </div>
+        <div class="factor-rule" style="background:rgba(5,150,105,.08);color:#065f46;border:1.5px solid rgba(5,150,105,.2);">
+          📦 <strong>Analoginya:</strong> 1 kubus besar dipotong 8 → luas permukaan total naik 2× lipat!
+        </div>
+        <div class="chips">
+          <span class="chip" style="background:#f0fdf4;color:#059669;border-color:rgba(5,150,105,.2);">↑ luas permukaan</span>
+          <span class="chip" style="background:#f0fdf4;color:#059669;border-color:rgba(5,150,105,.2);">↑ area kontak</span>
+          <span class="chip" style="background:#f0fdf4;color:#059669;border-color:rgba(5,150,105,.2);">↑ laju reaksi</span>
+        </div>
+        <div class="reallife">
+          <div class="rl-item">
+            <div class="rl-icon">💣</div>
+            <div class="rl-text"><strong>Debu Tepung & Ledakan</strong>Tepung yang melayang di udara (partikel halus) bisa meledak — luas permukaan ekstrem!</div>
+          </div>
+          <div class="rl-item">
+            <div class="rl-icon">🏭</div>
+            <div class="rl-text"><strong>Industri Kimia</strong>Katalis dipakai dalam bentuk serbuk/granul untuk memaksimalkan luas permukaan</div>
+          </div>
+          <div class="rl-item">
+            <div class="rl-icon">🍫</div>
+            <div class="rl-text"><strong>Cokelat Diparut vs Dipotong</strong>Cokelat parut meleleh jauh lebih cepat karena luas permukaannya lebih besar</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="vis-card surf-vis" id="surfVis">
+          <div style="font-size:12px;color:rgba(255,255,255,.5);font-weight:600;align-self:flex-start;">Pilih ukuran partikel:</div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;" id="surfBtns">
+            <button onclick="setSurf(0)" class="surf-opt active-surf" style="padding:7px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.3);background:rgba(5,150,105,.5);color:#fff;cursor:pointer;font-size:12px;font-weight:700;">🪨 Besar</button>
+            <button onclick="setSurf(1)" class="surf-opt" style="padding:7px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:12px;font-weight:700;">🧊 Sedang</button>
+            <button onclick="setSurf(2)" class="surf-opt" style="padding:7px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:12px;font-weight:700;">🌿 Serbuk</button>
+          </div>
+          <canvas id="surfCanvas" width="300" height="130" style="border-radius:12px;max-width:100%;"></canvas>
+          <div style="font-size:12px;color:rgba(255,255,255,.6);">Luas permukaan: <strong id="surfLabel" style="color:#6ee7b7;">Rendah</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: KATALIS -->
+  <div class="tab-panel" id="tab3">
+    <div class="factor-layout">
+      <div class="factor-content">
+        <div class="factor-title" style="background:linear-gradient(135deg,#d97706,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          ⚡ Katalis
+        </div>
+        <div class="factor-body">
+          Katalis adalah zat yang mempercepat reaksi <strong>tanpa ikut bereaksi</strong> (tidak habis). Cara kerjanya dengan menurunkan <strong>energi aktivasi (Eₐ)</strong>.
+          <br><br>
+          Ibarat GPS yang nyariin jalan pintas — tujuannya sama, tapi jalannya lebih mudah!
+        </div>
+        <div class="factor-rule" style="background:rgba(217,119,6,.08);color:#92400e;border:1.5px solid rgba(217,119,6,.2);">
+          ⚡ <strong>Kunci:</strong> Katalis menurunkan Eₐ → lebih banyak partikel yang berhasil bereaksi pada suhu yang sama!
+        </div>
+        <div class="chips">
+          <span class="chip" style="background:#fffbeb;color:#d97706;border-color:rgba(217,119,6,.2);">↓ energi aktivasi</span>
+          <span class="chip" style="background:#fffbeb;color:#d97706;border-color:rgba(217,119,6,.2);">↑ reaksi berhasil</span>
+          <span class="chip" style="background:#fffbeb;color:#d97706;border-color:rgba(217,119,6,.2);">tidak habis</span>
+        </div>
+        <div class="reallife">
+          <div class="rl-item">
+            <div class="rl-icon">🫁</div>
+            <div class="rl-text"><strong>Enzim di Tubuh</strong>Enzim = katalis biologis. Amilase di mulut mempercepat pencernaan pati!</div>
+          </div>
+          <div class="rl-item">
+            <div class="rl-icon">🚗</div>
+            <div class="rl-text"><strong>Knalpot Catalytic Converter</strong>Mengubah gas berbahaya (CO, NOₓ) jadi CO₂ & N₂ yang lebih aman</div>
+          </div>
+          <div class="rl-item">
+            <div class="rl-icon">⚗️</div>
+            <div class="rl-text"><strong>Proses Haber-Bosch</strong>Fe (besi) sebagai katalis bikin NH₃ bisa diproduksi massal untuk pupuk</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="vis-card cat-vis" id="catVis">
+          <div style="font-size:12px;color:rgba(255,255,255,.5);font-weight:600;align-self:flex-start;">Diagram Energi Aktivasi:</div>
+          <canvas id="catCanvas" width="300" height="160" style="max-width:100%;"></canvas>
+          <div style="display:flex;gap:12px;justify-content:center;">
+            <button onclick="setCat(false)" id="catNo" style="padding:8px 16px;border-radius:10px;border:1.5px solid rgba(255,255,255,.3);background:rgba(220,38,38,.4);color:#fff;cursor:pointer;font-size:12px;font-weight:700;">❌ Tanpa Katalis</button>
+            <button onclick="setCat(true)" id="catYes" style="padding:8px 16px;border-radius:10px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer;font-size:12px;font-weight:700;">✅ Dengan Katalis</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SECTION 3: KEHIDUPAN SEHARI-HARI ══════════ -->
+<section class="section reveal" id="daily">
+  <div class="section-tag" style="background:rgba(8,145,178,.1);color:var(--c3);">🎬 Bagian 3</div>
+  <h2 class="section-title">Laju Reaksi di<br>Kehidupan Nyata</h2>
+  <p class="section-sub">Dari dapur sampai luar angkasa — laju reaksi ada di mana-mana. Klik kartu untuk tahu lebih lanjut!</p>
+
+  <div class="daily-grid">
+    <div class="daily-card reveal" onclick="showInfo('kembang')">
+      <div class="daily-thumb" style="background:linear-gradient(135deg,#1a0a00,#7c1a00);">
+        <span style="position:relative;z-index:1;">🎆</span>
+        <span class="play-btn">▶ Info</span>
+      </div>
+      <div class="daily-body">
+        <div class="daily-title">Kembang Api</div>
+        <div class="daily-desc">Reaksi pembakaran super cepat — milisekon! Faktor utama: suhu tinggi + oksigen berlimpah.</div>
+        <span class="daily-tag" style="background:#fff5f5;color:#dc2626;">🌡️ Suhu</span>
+      </div>
+    </div>
+
+    <div class="daily-card reveal" onclick="showInfo('karat')">
+      <div class="daily-thumb" style="background:linear-gradient(135deg,#1a0a00,#5c3200);">
+        <span style="position:relative;z-index:1;">🔩</span>
+        <span class="play-btn">▶ Info</span>
+      </div>
+      <div class="daily-body">
+        <div class="daily-title">Besi Berkarat</div>
+        <div class="daily-desc">Oksidasi lambat yang butuh bertahun-tahun. Bisa dipercepat dengan air laut (konsentrasi ion tinggi)!</div>
+        <span class="daily-tag" style="background:#f5f3ff;color:var(--c1);">💧 Konsentrasi</span>
+      </div>
+    </div>
+
+    <div class="daily-card reveal" onclick="showInfo('fermentasi')">
+      <div class="daily-thumb" style="background:linear-gradient(135deg,#001a10,#005c30);">
+        <span style="position:relative;z-index:1;">🍞</span>
+        <span class="play-btn">▶ Info</span>
+      </div>
+      <div class="daily-body">
+        <div class="daily-title">Fermentasi Roti</div>
+        <div class="daily-desc">Enzim ragi (katalis biologis) mengubah gula → CO₂ + alkohol. Adonan mengembang!</div>
+        <span class="daily-tag" style="background:#fffbeb;color:#d97706;">⚡ Katalis</span>
+      </div>
+    </div>
+
+    <div class="daily-card reveal" onclick="showInfo('tablet')">
+      <div class="daily-thumb" style="background:linear-gradient(135deg,#001a1a,#005050);">
+        <span style="position:relative;z-index:1;">💊</span>
+        <span class="play-btn">▶ Info</span>
+      </div>
+      <div class="daily-body">
+        <div class="daily-title">Tablet Effervescent</div>
+        <div class="daily-desc">Serbuk halus + air = reaksi cepat & gelembung CO₂. Luas permukaan maksimal!</div>
+        <span class="daily-tag" style="background:#f0fdf4;color:#059669;">📐 Luas Permukaan</span>
+      </div>
+    </div>
+
+    <div class="daily-card reveal" onclick="showInfo('makanan')">
+      <div class="daily-thumb" style="background:linear-gradient(135deg,#1a0a1a,#3c0060);">
+        <span style="position:relative;z-index:1;">❄️</span>
+        <span class="play-btn">▶ Info</span>
+      </div>
+      <div class="daily-body">
+        <div class="daily-title">Makanan di Kulkas</div>
+        <div class="daily-desc">Suhu rendah memperlambat semua reaksi kimia termasuk pembusukan. Prinsip dasar pengawetan!</div>
+        <span class="daily-tag" style="background:#fff5f5;color:#dc2626;">🌡️ Suhu</span>
+      </div>
+    </div>
+
+    <div class="daily-card reveal" onclick="showInfo('enzim')">
+      <div class="daily-thumb" style="background:linear-gradient(135deg,#0a1a00,#1a4a00);">
+        <span style="position:relative;z-index:1;">🫁</span>
+        <span class="play-btn">▶ Info</span>
+      </div>
+      <div class="daily-body">
+        <div class="daily-title">Enzim Pencernaan</div>
+        <div class="daily-desc">Amilase, pepsin, lipase — semua katalis biologis yang bikin metabolisme kita berjalan!</div>
+        <span class="daily-tag" style="background:#fffbeb;color:#d97706;">⚡ Katalis</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SECTION 4: PERHITUNGAN ══════════ -->
+<section class="section reveal" id="hitung">
+  <div class="section-tag" style="background:rgba(217,119,6,.1);color:var(--c5);">🧮 Bagian 4</div>
+  <h2 class="section-title">Perhitungan<br>Laju Reaksi</h2>
+  <p class="section-sub">Klik tiap topik untuk buka rumus + contoh soal lengkap. Dijamin lebih gampang dari yang kamu bayangin!</p>
+
+  <div class="calc-accordion">
+
+    <!-- ACC 1 -->
+    <div class="acc-item" id="acc0">
+      <div class="acc-header" onclick="toggleAcc(0)">
+        <div class="acc-num" style="background:linear-gradient(135deg,var(--c1),#8b5cf6);">1</div>
+        <div class="acc-title">Rumus Dasar Laju Reaksi</div>
+        <div class="acc-arrow">▾</div>
+      </div>
+      <div class="acc-body" id="acc-body0">
+        <div class="acc-body-inner">
+          <div class="formula-box">
+            <div class="f-main">v = Δ[A] / Δt = −(1/a) × Δ[A]/Δt</div>
+            <div class="f-where">
+              <table>
+                <tr><td>v</td><td>= laju reaksi (mol/L·s atau M/s)</td></tr>
+                <tr><td>Δ[A]</td><td>= perubahan konsentrasi A (mol/L)</td></tr>
+                <tr><td>Δt</td><td>= perubahan waktu (s)</td></tr>
+                <tr><td>a</td><td>= koefisien stoikiometri A</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="worked">
+            <div class="worked-title">📝 Contoh Soal</div>
+            <div class="worked-step">
+              <div class="step-num">1</div>
+              <div>Konsentrasi H₂ turun dari 0,8 M menjadi 0,2 M dalam 30 detik. Tentukan laju reaksi!</div>
+            </div>
+            <div class="worked-step">
+              <div class="step-num">2</div>
+              <div>Δ[H₂] = |0,2 − 0,8| = 0,6 M &nbsp;|&nbsp; Δt = 30 s</div>
+            </div>
+            <div class="worked-step">
+              <div class="step-num">3</div>
+              <div>v = Δ[H₂] / Δt = 0,6 / 30</div>
+            </div>
+            <div class="answer-box">v = 0,02 M/s = 2 × 10⁻² mol/L·s ✅</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACC 2 -->
+    <div class="acc-item" id="acc1">
+      <div class="acc-header" onclick="toggleAcc(1)">
+        <div class="acc-num" style="background:linear-gradient(135deg,#dc2626,#f97316);">2</div>
+        <div class="acc-title">Hukum Laju Reaksi & Orde Reaksi</div>
+        <div class="acc-arrow">▾</div>
+      </div>
+      <div class="acc-body" id="acc-body1">
+        <div class="acc-body-inner">
+          <div class="formula-box">
+            <div class="f-main">v = k [A]ˣ [B]ʸ</div>
+            <div class="f-where">
+              <table>
+                <tr><td>k</td><td>= konstanta laju reaksi (bergantung suhu)</td></tr>
+                <tr><td>[A],[B]</td><td>= konsentrasi reaktan A dan B</td></tr>
+                <tr><td>x, y</td><td>= orde reaksi terhadap A dan B</td></tr>
+                <tr><td>x+y</td><td>= orde reaksi total</td></tr>
+              </table>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0;">
+            <div style="text-align:center;padding:14px;background:#f5f3ff;border-radius:14px;border:1.5px solid rgba(109,40,217,.15);">
+              <div style="font-family:monospace;font-size:1.2rem;font-weight:800;color:var(--c1);">v = k</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">Orde Nol<br>[A]⁰ = 1</div>
+            </div>
+            <div style="text-align:center;padding:14px;background:#fff5f5;border-radius:14px;border:1.5px solid rgba(220,38,38,.15);">
+              <div style="font-family:monospace;font-size:1.2rem;font-weight:800;color:#dc2626;">v = k[A]</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">Orde Satu<br>Linier</div>
+            </div>
+            <div style="text-align:center;padding:14px;background:#fffbeb;border-radius:14px;border:1.5px solid rgba(217,119,6,.15);">
+              <div style="font-family:monospace;font-size:1.2rem;font-weight:800;color:#d97706;">v = k[A]²</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">Orde Dua<br>Kuadratik</div>
+            </div>
+          </div>
+          <div class="worked">
+            <div class="worked-title">📝 Contoh Soal</div>
+            <div class="worked-step">
+              <div class="step-num">1</div>
+              <div>Reaksi A + B → C. Data percobaan: [A]=0,1M, [B]=0,1M → v=2×10⁻³ M/s; [A]=0,2M, [B]=0,1M → v=8×10⁻³ M/s. Tentukan orde terhadap A!</div>
+            </div>
+            <div class="worked-step">
+              <div class="step-num">2</div>
+              <div>v₂/v₁ = k[A₂]ˣ/k[A₁]ˣ → 4 = (0,2/0,1)ˣ = 2ˣ</div>
+            </div>
+            <div class="worked-step">
+              <div class="step-num">3</div>
+              <div>2ˣ = 4 = 2² → x = 2</div>
+            </div>
+            <div class="answer-box">Orde reaksi terhadap A = 2 (orde dua) ✅</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACC 3 -->
+    <div class="acc-item" id="acc2">
+      <div class="acc-header" onclick="toggleAcc(2)">
+        <div class="acc-num" style="background:linear-gradient(135deg,#059669,#06b6d4);">3</div>
+        <div class="acc-title">Persamaan Arrhenius — Suhu & Konstanta Laju</div>
+        <div class="acc-arrow">▾</div>
+      </div>
+      <div class="acc-body" id="acc-body2">
+        <div class="acc-body-inner">
+          <div class="formula-box">
+            <div class="f-main">k = A · e^(−Eₐ/RT)</div>
+            <div class="f-where">
+              <table>
+                <tr><td>k</td><td>= konstanta laju reaksi</td></tr>
+                <tr><td>A</td><td>= faktor frekuensi (faktor pra-eksponensial)</td></tr>
+                <tr><td>Eₐ</td><td>= energi aktivasi (J/mol)</td></tr>
+                <tr><td>R</td><td>= konstanta gas = 8,314 J/mol·K</td></tr>
+                <tr><td>T</td><td>= suhu absolut (Kelvin)</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="formula-box" style="margin-top:12px;">
+            <div style="font-size:12px;font-weight:700;color:var(--c3);margin-bottom:8px;">RUMUS PRAKTIS (Van't Hoff):</div>
+            <div class="f-main">k₂/k₁ = 2^((T₂−T₁)/10)</div>
+          </div>
+          <div class="worked">
+            <div class="worked-title">📝 Contoh Soal</div>
+            <div class="worked-step">
+              <div class="step-num">1</div>
+              <div>Pada 20°C laju reaksi = 0,02 M/s. Berapa laju pada 60°C? (gunakan aturan Van't Hoff, setiap +10°C laju 2×)</div>
+            </div>
+            <div class="worked-step">
+              <div class="step-num">2</div>
+              <div>ΔT = 60 − 20 = 40°C → faktor = 2^(40/10) = 2⁴ = 16</div>
+            </div>
+            <div class="worked-step">
+              <div class="step-num">3</div>
+              <div>v₆₀ = 0,02 × 16 = 0,32 M/s</div>
+            </div>
+            <div class="answer-box">Laju pada 60°C = 0,32 M/s ✅</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACC 4 -->
+    <div class="acc-item" id="acc3">
+      <div class="acc-header" onclick="toggleAcc(3)">
+        <div class="acc-num" style="background:linear-gradient(135deg,#d97706,#ec4899);">4</div>
+        <div class="acc-title">Menghitung Konstanta Laju (k) dari Data</div>
+        <div class="acc-arrow">▾</div>
+      </div>
+      <div class="acc-body" id="acc-body3">
+        <div class="acc-body-inner">
+          <div class="formula-box">
+            <div class="f-main">k = v / ([A]ˣ · [B]ʸ)</div>
+            <div class="f-where">
+              <table>
+                <tr><td>k</td><td>= konstanta laju (satuannya bergantung orde total)</td></tr>
+                <tr><td>Orde 1</td><td>→ satuan k = s⁻¹</td></tr>
+                <tr><td>Orde 2</td><td>→ satuan k = M⁻¹s⁻¹ atau L/mol·s</td></tr>
+                <tr><td>Orde 0</td><td>→ satuan k = M/s</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="worked">
+            <div class="worked-title">📝 Contoh Soal</div>
+            <div class="worked-step">
+              <div class="step-num">1</div>
+              <div>Dari soal sebelumnya: v = k[A]²[B]. Saat [A]=0,1M, [B]=0,1M, v=2×10⁻³ M/s. Cari k!</div>
+            </div>
+            <div class="worked-step">
+              <div class="step-num">2</div>
+              <div>k = v / ([A]² × [B]) = 2×10⁻³ / ((0,1)² × 0,1)</div>
+            </div>
+            <div class="worked-step">
+              <div class="step-num">3</div>
+              <div>k = 2×10⁻³ / (0,01 × 0,1) = 2×10⁻³ / 10⁻³</div>
+            </div>
+            <div class="answer-box">k = 2 M⁻²s⁻¹ = 2 L²/mol²·s ✅</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ QUIZ ══════════ -->
+<section class="section reveal" id="quiz">
+  <div class="section-tag" style="background:rgba(219,39,119,.1);color:var(--c2);">🎮 Mini Kuis</div>
+  <h2 class="section-title">Uji Pemahaman<br>Kamu!</h2>
+  <p class="section-sub">5 soal singkat buat cek seberapa paham kamu udah baca materinya. Gas!</p>
+
+  <div class="quiz-wrap">
+    <div style="font-size:12px;opacity:.7;margin-bottom:8px;">Pertanyaan <span id="qNum">1</span>/5</div>
+    <div class="quiz-q" id="quizQ">Loading...</div>
+    <div class="quiz-opts" id="quizOpts"></div>
+    <div class="quiz-feedback" id="quizFeedback"></div>
+    <button class="quiz-next" id="quizNext" onclick="nextQ()">Soal Berikutnya →</button>
+  </div>
+</section>
+
+<footer>
+  <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:900;
+    background:linear-gradient(135deg,#6d28d9,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;">
+    BioHalt
+  </div>
+  <div>Platform Belajar Kimia Interaktif · SMA Kelas XI · 2024</div>
+  <div style="margin-top:6px;opacity:.6;">Dibuat dengan ❤️ untuk generasi kimia Indonesia</div>
+</footer>
+
+<!-- INFO MODAL -->
+<div id="infoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
+  backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:24px;">
+  <div id="infoBox" style="background:#fff;border-radius:24px;padding:32px;max-width:480px;width:100%;
+    animation:popIn .3s ease;position:relative;">
+    <button onclick="closeInfo()" style="position:absolute;top:16px;right:16px;background:none;
+      border:none;font-size:20px;cursor:pointer;color:#999;">✕</button>
+    <div id="infoContent"></div>
+  </div>
+</div>
+
+<script>
+// ── PROGRESS BAR ─────────────────────────────────────────────────────────────
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+});
+
+// ── SCROLL REVEAL ─────────────────────────────────────────────────────────────
+const io = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      e.target.style.transitionDelay = (i * 0.05) + 's';
+      e.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// ── NAV SCROLL ────────────────────────────────────────────────────────────────
+function scrollTo(id) {
+  document.querySelector(id).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(i) {
+  document.querySelectorAll('.tab-panel').forEach((p, j) => {
+    p.classList.toggle('active', j === i);
+  });
+  document.querySelectorAll('.tab-btn').forEach((b, j) => {
+    b.classList.toggle('active', j === i);
+  });
+  if (i === 3) drawCatCanvas(withCat);
+  if (i === 2) drawSurfCanvas(surfLevel);
+}
+
+// ── CONCENTRATION VIS ────────────────────────────────────────────────────────
+function updateConc() {
+  const v = +document.getElementById('concSlider').value;
+  const container = document.getElementById('concDots');
+  const count = v * 8;
+  document.getElementById('concCount').textContent = count + ' partikel';
+  container.innerHTML = '';
+  const colors = ['#c4b5fd','#8b5cf6','#60a5fa','#34d399','#fbbf24','#f87171'];
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement('div');
+    const isHit = Math.random() < (v / 6);
+    d.style.cssText = `width:${isHit?14:10}px;height:${isHit?14:10}px;border-radius:50%;
+      background:${isHit ? '#fcd34d' : colors[i % colors.length]};
+      animation:popIn .3s ease ${(i * 0.02)}s both,float ${1.5 + Math.random()}s ease-in-out ${Math.random()}s infinite;
+      box-shadow:0 0 ${isHit?8:4}px ${isHit?'rgba(252,211,77,.6)':'rgba(139,92,246,.3)'};`;
+    container.appendChild(d);
+  }
+}
+document.getElementById('concSlider').addEventListener('input', updateConc);
+updateConc();
+
+// ── TEMPERATURE VIS ──────────────────────────────────────────────────────────
+function updateTemp() {
+  const v = +document.getElementById('tempSlider').value;
+  document.getElementById('thermoBar').style.height = v + '%';
+  document.getElementById('tempLabel').textContent = v + '°C';
+  const container = document.getElementById('tempParticles');
+  const count = Math.floor(4 + v / 10);
+  container.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement('div');
+    const speed = 0.5 + (v / 100) * 1.5;
+    const r = 6 + Math.random() * 6;
+    const hue = 0 + (v / 100) * 30;
+    d.style.cssText = `width:${r*2}px;height:${r*2}px;border-radius:50%;
+      background:hsl(${hue},90%,${40 + v * 0.2}%);
+      animation:float ${speed}s ease-in-out ${Math.random()}s infinite;
+      box-shadow:0 0 ${v/10}px hsla(${hue},90%,60%,.5);`;
+    container.appendChild(d);
+  }
+}
+document.getElementById('tempSlider').addEventListener('input', updateTemp);
+updateTemp();
+
+// ── SURFACE VIS ──────────────────────────────────────────────────────────────
+let surfLevel = 0;
+function setSurf(level) {
+  surfLevel = level;
+  document.querySelectorAll('.surf-opt').forEach((b, i) => {
+    b.style.background = i === level ? 'rgba(5,150,105,.5)' : 'rgba(255,255,255,.1)';
+  });
+  const labels = ['Rendah (bongkahan besar)', 'Sedang (potongan)', 'Tinggi (serbuk halus)'];
+  document.getElementById('surfLabel').textContent = labels[level];
+  drawSurfCanvas(level);
+}
+function drawSurfCanvas(level) {
+  const canvas = document.getElementById('surfCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const configs = [
+    { blocks: 1, size: 80 },
+    { blocks: 4, size: 36 },
+    { blocks: 16, size: 16 },
+  ];
+  const cfg = configs[level];
+  const cols = Math.ceil(Math.sqrt(cfg.blocks));
+  const rows = Math.ceil(cfg.blocks / cols);
+  const startX = (W - cols * (cfg.size + 4)) / 2;
+  const startY = (H - rows * (cfg.size + 4)) / 2;
+  const colors = ['#34d399','#6ee7b7','#a7f3d0','#059669'];
+  let drawn = 0;
+  for (let r = 0; r < rows && drawn < cfg.blocks; r++) {
+    for (let c = 0; c < cols && drawn < cfg.blocks; c++) {
+      const x = startX + c * (cfg.size + 4);
+      const y = startY + r * (cfg.size + 4);
+      ctx.fillStyle = colors[drawn % colors.length];
+      ctx.shadowColor = 'rgba(52,211,153,.4)';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.roundRect(x, y, cfg.size, cfg.size, 4);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // surface highlight
+      ctx.strokeStyle = 'rgba(255,255,255,.4)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x + 2, y + 2, cfg.size - 4, cfg.size - 4, 3);
+      ctx.stroke();
+      drawn++;
+    }
+  }
+}
+drawSurfCanvas(0);
+
+// ── CATALYST VIS ─────────────────────────────────────────────────────────────
+let withCat = false;
+function setCat(val) {
+  withCat = val;
+  document.getElementById('catNo').style.background = val ? 'rgba(255,255,255,.1)' : 'rgba(220,38,38,.4)';
+  document.getElementById('catYes').style.background = val ? 'rgba(5,150,105,.4)' : 'rgba(255,255,255,.1)';
+  drawCatCanvas(val);
+}
+function drawCatCanvas(useCat) {
+  const canvas = document.getElementById('catCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Axes
+  ctx.strokeStyle = 'rgba(255,255,255,.2)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(30, 10); ctx.lineTo(30, H - 20); ctx.lineTo(W - 10, H - 20); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.4)';
+  ctx.font = '9px sans-serif';
+  ctx.fillText('Energi', 0, 14);
+  ctx.fillText('Reaksi →', W - 50, H - 6);
+
+  const reactant = { x: 40, y: H - 50 };
+  const product  = { x: W - 30, y: H - 35 };
+  const peakX    = W / 2;
+  const peakY    = useCat ? 40 : 20;
+
+  // Path without catalyst (dashed if showing cat)
+  if (useCat) {
+    ctx.setLineDash([5, 4]);
+    ctx.strokeStyle = 'rgba(239,68,68,.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(reactant.x, reactant.y);
+    ctx.bezierCurveTo(peakX - 40, reactant.y, peakX - 20, 20, peakX, 20);
+    ctx.bezierCurveTo(peakX + 20, 20, peakX + 40, product.y, product.x, product.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Main path
+  ctx.strokeStyle = useCat ? '#34d399' : '#f87171';
+  ctx.lineWidth = 2.5;
+  ctx.shadowColor = useCat ? 'rgba(52,211,153,.5)' : 'rgba(248,113,113,.5)';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.moveTo(reactant.x, reactant.y);
+  ctx.bezierCurveTo(peakX - 40, reactant.y, peakX - 20, peakY, peakX, peakY);
+  ctx.bezierCurveTo(peakX + 20, peakY, peakX + 40, product.y, product.x, product.y);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Peak label
+  const peakLabel = useCat ? 'Eₐ lebih rendah ✅' : 'Eₐ tinggi';
+  ctx.fillStyle = useCat ? '#6ee7b7' : '#fca5a5';
+  ctx.font = 'bold 10px sans-serif';
+  ctx.fillText(peakLabel, peakX - 35, peakY - 8);
+
+  // Dots
+  const dots = [
+    { x: reactant.x, y: reactant.y, label: 'Reaktan' },
+    { x: product.x, y: product.y, label: 'Produk' },
+  ];
+  dots.forEach(d => {
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.6)';
+    ctx.font = '9px sans-serif';
+    ctx.fillText(d.label, d.x - 18, d.y + 14);
+  });
+}
+drawCatCanvas(false);
+
+// ── ACCORDION ────────────────────────────────────────────────────────────────
+function toggleAcc(i) {
+  const item = document.getElementById('acc' + i);
+  const body = document.getElementById('acc-body' + i);
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.acc-item').forEach(el => {
+    el.classList.remove('open');
+    el.querySelector('.acc-body').style.maxHeight = '0';
+  });
+  if (!isOpen) {
+    item.classList.add('open');
+    body.style.maxHeight = body.scrollHeight + 'px';
+  }
+}
+
+// ── INFO MODAL ────────────────────────────────────────────────────────────────
+const infos = {
+  kembang: {
+    emoji: '🎆',
+    title: 'Kembang Api',
+    body: `Kembang api merupakan reaksi oksidasi-reduksi yang sangat cepat.
+      <br><br><strong>Kenapa cepat banget?</strong>
+      <ul style="margin-top:8px;padding-left:18px;font-size:14px;line-height:1.8;">
+        <li>Suhu sangat tinggi (>1000°C) saat terbakar</li>
+        <li>Bubuk mesiu dalam bentuk serbuk halus (luas permukaan besar)</li>
+        <li>Oksigen tersedia bebas di udara</li>
+      </ul>
+      <div style="margin-top:12px;padding:10px 14px;background:#fff5f5;border-radius:10px;font-size:13px;">
+      ⚡ <strong>Fakta:</strong> Reaksi kembang api selesai dalam milidetik!
+      </div>`,
+  },
+  karat: {
+    emoji: '🔩',
+    title: 'Besi Berkarat',
+    body: `Perkaratan besi (korosi) adalah reaksi oksidasi yang sangat lambat.
+      <br><br><strong>Persamaannya:</strong><br>
+      <code style="background:#f5f5f5;padding:4px 8px;border-radius:6px;">4Fe + 3O₂ + 6H₂O → 4Fe(OH)₃</code>
+      <br><br><strong>Faktor yang mempercepat:</strong>
+      <ul style="margin-top:8px;padding-left:18px;font-size:14px;line-height:1.8;">
+        <li>Air laut (konsentrasi ion Cl⁻ tinggi)</li>
+        <li>Suhu lebih tinggi</li>
+        <li>Permukaan besi yang tergores (luas permukaan baru)</li>
+      </ul>`,
+  },
+  fermentasi: {
+    emoji: '🍞',
+    title: 'Fermentasi Roti',
+    body: `Ragi (Saccharomyces cerevisiae) mengandung enzim zimase yang mengkatalisis fermentasi.
+      <br><br><strong>Reaksi:</strong><br>
+      <code style="background:#f5f5f5;padding:4px 8px;border-radius:6px;font-size:13px;">C₆H₁₂O₆ → 2C₂H₅OH + 2CO₂</code>
+      <br><br>CO₂ yang dihasilkan itulah yang bikin adonan roti mengembang!
+      <div style="margin-top:12px;padding:10px 14px;background:#fffbeb;border-radius:10px;font-size:13px;">
+      ⚡ <strong>Enzim = katalis biologis</strong> yang tidak habis dan bisa digunakan lagi!
+      </div>`,
+  },
+  tablet: {
+    emoji: '💊',
+    title: 'Tablet Effervescent',
+    body: `Tablet ini dirancang untuk larut cepat — tujuannya memaksimalkan luas permukaan!
+      <br><br><strong>Kenapa berbentuk tablet serbuk?</strong>
+      <ul style="margin-top:8px;padding-left:18px;font-size:14px;line-height:1.8;">
+        <li>Partikel kecil = luas permukaan total lebih besar</li>
+        <li>Lebih banyak titik kontak dengan air</li>
+        <li>Reaksi asam basa (NaHCO₃ + asam sitrat) lebih cepat</li>
+      </ul>
+      <code style="background:#f0fdf4;padding:4px 8px;border-radius:6px;font-size:12px;margin-top:8px;display:block;">NaHCO₃ + H⁺ → Na⁺ + H₂O + CO₂ ↑</code>`,
+  },
+  makanan: {
+    emoji: '❄️',
+    title: 'Kulkas & Pengawetan Makanan',
+    body: `Suhu rendah memperlambat semua reaksi kimia, termasuk metabolisme bakteri.
+      <br><br><strong>Prinsipnya:</strong>
+      <ul style="margin-top:8px;padding-left:18px;font-size:14px;line-height:1.8;">
+        <li>0–4°C: bakteri hampir tidak aktif</li>
+        <li>−18°C (freezer): reaksi hampir berhenti total</li>
+        <li>Berdasarkan aturan Van't Hoff: setiap turun 10°C, laju ~½ lipat</li>
+      </ul>`,
+  },
+  enzim: {
+    emoji: '🫁',
+    title: 'Enzim dalam Tubuh',
+    body: `Enzim adalah protein yang berperan sebagai katalis biologis. Sangat spesifik!
+      <br><br><strong>Contoh enzim pencernaan:</strong>
+      <ul style="margin-top:8px;padding-left:18px;font-size:14px;line-height:1.8;">
+        <li>🦷 <strong>Amilase</strong> (mulut) — memecah pati jadi maltosa</li>
+        <li>🫄 <strong>Pepsin</strong> (lambung) — memecah protein</li>
+        <li>💪 <strong>Lipase</strong> (usus) — memecah lemak</li>
+      </ul>
+      <div style="margin-top:12px;padding:10px 14px;background:#f5f3ff;border-radius:10px;font-size:13px;">
+      Tanpa enzim, reaksi pencernaan butuh berhari-hari! Dengan enzim, selesai dalam jam.
+      </div>`,
+  },
+};
+
+function showInfo(key) {
+  const d = infos[key];
+  document.getElementById('infoContent').innerHTML = `
+    <div style="font-size:48px;margin-bottom:12px;">${d.emoji}</div>
+    <h3 style="font-family:'Syne',sans-serif;font-size:1.4rem;margin-bottom:12px;">${d.title}</h3>
+    <div style="font-size:14px;line-height:1.8;color:#374151;">${d.body}</div>
+  `;
+  const modal = document.getElementById('infoModal');
+  modal.style.display = 'flex';
+}
+function closeInfo() {
+  document.getElementById('infoModal').style.display = 'none';
+}
+document.getElementById('infoModal').addEventListener('click', function(e) {
+  if (e.target === this) closeInfo();
+});
+
+// ── QUIZ ─────────────────────────────────────────────────────────────────────
+const questions = [
+  {
+    q: 'Konsentrasi H₂O₂ turun dari 1,0 M menjadi 0,4 M dalam 60 detik. Berapa laju reaksinya?',
+    opts: ['0,01 M/s', '0,005 M/s', '0,1 M/s', '0,06 M/s'],
+    ans: 0,
+    exp: 'v = Δ[H₂O₂]/Δt = (1,0−0,4)/60 = 0,6/60 = 0,01 M/s ✅'
+  },
+  {
+    q: 'Faktor mana yang TIDAK langsung meningkatkan frekuensi tumbukan antar partikel?',
+    opts: ['Menambah konsentrasi', 'Menaikkan suhu', 'Menambah katalis', 'Memperkecil ukuran partikel'],
+    ans: 2,
+    exp: 'Katalis menurunkan energi aktivasi, bukan meningkatkan frekuensi tumbukan secara langsung! ✅'
+  },
+  {
+    q: 'Pada 30°C laju reaksi = 0,04 M/s. Berapa laju pada 50°C? (Van\'t Hoff: tiap +10°C laju 2×)',
+    opts: ['0,08 M/s', '0,16 M/s', '0,32 M/s', '0,12 M/s'],
+    ans: 1,
+    exp: 'ΔT = 20°C, faktor = 2^(20/10) = 2² = 4. Laju = 0,04 × 4 = 0,16 M/s ✅'
+  },
+  {
+    q: 'Persamaan laju: v = k[A]²[B]. Jika [A] digandakan, laju berubah menjadi...?',
+    opts: ['2× lebih cepat', '4× lebih cepat', '3× lebih cepat', 'Tidak berubah'],
+    ans: 1,
+    exp: 'Orde terhadap A = 2. Jika [A] jadi 2×, maka laju = k(2[A])²[B] = 4k[A]²[B] = 4× lipat! ✅'
+  },
+  {
+    q: 'Seorang siswa melarutkan gula batu dan gula pasir dalam air hangat. Mana yang lebih cepat larut?',
+    opts: ['Gula batu, karena lebih besar', 'Gula pasir, karena luas permukaan lebih besar', 'Sama saja', 'Tergantung jumlah airnya'],
+    ans: 1,
+    exp: 'Gula pasir (butiran halus) punya luas permukaan total lebih besar → lebih banyak titik kontak → lebih cepat larut! ✅'
+  },
+];
+let qIdx = 0, answered = false;
+
+function renderQ() {
+  const q = questions[qIdx];
+  document.getElementById('qNum').textContent = qIdx + 1;
+  document.getElementById('quizQ').textContent = q.q;
+  document.getElementById('quizFeedback').textContent = '';
+  document.getElementById('quizNext').style.display = 'none';
+  answered = false;
+  const opts = document.getElementById('quizOpts');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-opt';
+    btn.textContent = o;
+    btn.onclick = () => checkAns(i);
+    opts.appendChild(btn);
+  });
+}
+
+function checkAns(i) {
+  if (answered) return;
+  answered = true;
+  const q = questions[qIdx];
+  const btns = document.querySelectorAll('.quiz-opt');
+  btns[q.ans].classList.add('correct');
+  if (i !== q.ans) btns[i].classList.add('wrong');
+  document.getElementById('quizFeedback').textContent = i === q.ans ? '🎉 Benar! ' + q.exp : '❌ Kurang tepat. ' + q.exp;
+  if (qIdx < questions.length - 1) document.getElementById('quizNext').style.display = 'inline-block';
+  else {
+    setTimeout(() => {
+      document.getElementById('quizFeedback').textContent = '🏆 Selesai! Kamu sudah belajar semua materi laju reaksi!';
+    }, 1200);
+  }
+}
+
+function nextQ() {
+  qIdx++;
+  renderQ();
+}
+
+renderQ();
+</script>
+</body>
+</html>
